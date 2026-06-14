@@ -119,7 +119,7 @@ export default function Navbar() {
                     </Link>
                     {isAdmin() && (
                       <Link to="/admin/ai" className="block rounded-xl px-3 py-1.5 text-ink-soft hover:bg-paper-deep">
-                        🐱 AI 设置
+                        AI 设置
                       </Link>
                     )}
                     <button
