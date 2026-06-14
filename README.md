@@ -149,9 +149,12 @@ pwsh deploy/nacos/publish-config.ps1
 
 ---
 
-## 🤖 Spring AI · 大模型网关
-`blog-ai` 通过 OpenAI 兼容协议接入本机大模型网关（默认 `http://host.docker.internal:9191`，模型 `claude-opus-4.6`）。
-可通过环境变量覆盖：`LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY`。
+## 🤖 Spring AI · 大模型
+
+`blog-ai` 通过 OpenAI 兼容协议接入大模型，默认 **DeepSeek**（`https://api.deepseek.com`，模型 `deepseek-chat`）。
+
+通过环境变量覆盖：`LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY`。
+> 🔑 **密钥安全**：`LLM_API_KEY` 不写入仓库——复制 `.env.example` 为 `.env` 并填入真实 key（`.env` 已被 `.gitignore` 忽略），`docker-compose.app.yml` 通过 `${LLM_API_KEY}` 引用。
 
 ---
 

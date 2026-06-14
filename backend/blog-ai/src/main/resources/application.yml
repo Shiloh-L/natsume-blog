@@ -4,11 +4,11 @@ server:
 spring:
   ai:
     openai:
-      base-url: ${LLM_BASE_URL:http://127.0.0.1:9191}
+      base-url: ${LLM_BASE_URL:https://api.deepseek.com}
       api-key: ${LLM_API_KEY:sk-no-key-required}
       chat:
         options:
-          model: ${LLM_MODEL:claude-opus-4.6}
+          model: ${LLM_MODEL:deepseek-chat}
           temperature: 0.7
   cloud:
     sentinel:
