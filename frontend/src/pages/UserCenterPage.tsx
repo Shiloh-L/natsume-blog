@@ -9,9 +9,11 @@ import { useAuthStore } from '../store/authStore'
 import { toast } from '../store/toastStore'
 import type { Post, UserProfile } from '../types'
 import Loading from '../components/Loading'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function UserCenterPage() {
   const { user, patchUser } = useAuthStore()
+  usePageTitle(user?.nickname ? `${user.nickname} 的小屋` : '我的小屋')
   const navigate = useNavigate()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [posts, setPosts] = useState<Post[]>([])

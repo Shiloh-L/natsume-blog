@@ -6,9 +6,11 @@ import PostCard from '../components/PostCard'
 import PostCardSkeleton from '../components/PostCardSkeleton'
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../store/toastStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 import type { Post } from '../types'
 
 export default function FollowFeedPage() {
+  usePageTitle('牵绊')
   const { user } = useAuthStore()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)

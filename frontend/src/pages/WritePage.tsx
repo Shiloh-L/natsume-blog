@@ -26,6 +26,7 @@ import { toast } from '../store/toastStore'
 import MarkdownView from '../components/MarkdownView'
 import Select from '../components/Select'
 import { readingStats } from '../utils/toc'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 type Mode = 'edit' | 'split' | 'preview'
 
@@ -34,6 +35,7 @@ export default function WritePage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const editId = params.get('id') ? Number(params.get('id')) : null
+  usePageTitle(editId ? '编辑文章' : '写新文章')
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
   const { data: tags } = useQuery({ queryKey: ['tags'], queryFn: fetchTags })

@@ -23,6 +23,7 @@ const BookmarksPage = lazy(() => import('./pages/BookmarksPage'))
 const ArchivePage = lazy(() => import('./pages/ArchivePage'))
 const TagPage = lazy(() => import('./pages/TagPage'))
 const AiSettingsPage = lazy(() => import('./pages/AiSettingsPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/me" element={<UserCenterPage />} />
             <Route path="/admin/ai" element={<AiSettingsPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </main>

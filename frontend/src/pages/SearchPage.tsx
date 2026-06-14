@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { search } from '../api/search'
 import Loading from '../components/Loading'
+import { usePageTitle } from '../hooks/usePageTitle'
 import type { SearchHit } from '../types'
 
 export default function SearchPage() {
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''
+  usePageTitle(q ? `搜索「${q}」` : '寻觅一段回忆')
   const [input, setInput] = useState(q)
   const [results, setResults] = useState<SearchHit[]>([])
   const [total, setTotal] = useState(0)

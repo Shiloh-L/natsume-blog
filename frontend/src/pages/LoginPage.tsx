@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { login } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function LoginPage() {
+  usePageTitle('登录')
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('admin123')
   const [error, setError] = useState('')

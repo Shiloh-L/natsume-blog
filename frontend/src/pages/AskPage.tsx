@@ -4,10 +4,12 @@ import { motion } from 'motion/react'
 import { askBlog, type AskResult } from '../api/ai'
 import MarkdownView from '../components/MarkdownView'
 import { toast } from '../store/toastStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const SUGGESTIONS = ['博客里讲了哪些妖怪的故事？', '这个博客的技术架构是怎样的？', '有没有关于夏天和离别的文章？']
 
 export default function AskPage() {
+  usePageTitle('问猫咪老师')
   const [question, setQuestion] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AskResult | null>(null)

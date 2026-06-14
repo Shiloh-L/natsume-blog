@@ -5,6 +5,7 @@ import { fetchPosts, fetchTags } from '../api/posts'
 import PostCard from '../components/PostCard'
 import PostCardSkeleton from '../components/PostCardSkeleton'
 import ErrorState from '../components/ErrorState'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function TagPage() {
   const { id } = useParams()
@@ -18,6 +19,7 @@ export default function TagPage() {
 
   const tag = tags?.find((t) => t.id === tagId)
   const total = data?.total ?? 0
+  usePageTitle(tag?.name ? `标签 · ${tag.name}` : '标签')
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">

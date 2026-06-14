@@ -8,6 +8,7 @@ import PostCardSkeleton from '../components/PostCardSkeleton'
 import SiteAside from '../components/SiteAside'
 import ForestSpirits from '../components/ForestSpirits'
 import ErrorState from '../components/ErrorState'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const SUBTITLES = [
   '记录那些只有我能看见的朋友',
@@ -141,6 +142,7 @@ function Hero() {
 }
 
 export default function HomePage() {
+  usePageTitle()
   const [page, setPage] = useState(1)
   const size = 6
   const { data, isLoading, isFetching, isError, refetch } = useQuery({

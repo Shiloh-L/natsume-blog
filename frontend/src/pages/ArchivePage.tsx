@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchArchive, type ArchiveItem } from '../api/posts'
 import Loading from '../components/Loading'
 import ErrorState from '../components/ErrorState'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 interface YearGroup {
   year: string
@@ -24,6 +25,7 @@ function groupByYear(items: ArchiveItem[]): YearGroup[] {
 }
 
 export default function ArchivePage() {
+  usePageTitle('长卷')
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['archive'], queryFn: fetchArchive })
 
   const groups = useMemo(() => groupByYear(data || []), [data])

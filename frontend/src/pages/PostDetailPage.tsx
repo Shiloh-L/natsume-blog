@@ -18,6 +18,7 @@ import { extractHeadings, readingStats } from '../utils/toc'
 import { coverOf } from '../utils/cover'
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../store/toastStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 import type { Comment } from '../types'
 
 function CommentItem({ c }: { c: Comment }) {
@@ -155,6 +156,7 @@ export default function PostDetailPage() {
 
   const headings = useMemo(() => extractHeadings(post?.content || ''), [post?.content])
   const stats = useMemo(() => readingStats(post?.content || ''), [post?.content])
+  usePageTitle(post?.title)
 
   if (isLoading) return <Loading />
   if (isError || !post)

@@ -4,9 +4,11 @@ import { fetchMoments } from '../api/moments'
 import MomentComposer from '../components/MomentComposer'
 import MomentEntry from '../components/MomentEntry'
 import Loading from '../components/Loading'
+import { usePageTitle } from '../hooks/usePageTitle'
 import type { Moment } from '../types/moment'
 
 export default function MomentsPage() {
+  usePageTitle('光阴')
   const [moments, setMoments] = useState<Moment[]>([])
   const [loading, setLoading] = useState(true)
 

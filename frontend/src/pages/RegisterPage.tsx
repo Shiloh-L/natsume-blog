@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { register } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function RegisterPage() {
+  usePageTitle('安家')
   const [form, setForm] = useState({ username: '', password: '', nickname: '', email: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)

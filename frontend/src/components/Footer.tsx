@@ -16,7 +16,7 @@ export default function Footer() {
       <div className="bg-matcha-deep/10 px-4 py-8 text-center text-sm text-ink-soft">
         <p className="brush-title text-lg text-matcha-deep">名字一旦归还，便化作温柔的风</p>
         <p className="mt-2 text-ink-light">
-          夏目友人帐 · 温柔小屋 — 用 React + Spring Cloud 编织的微服务博客
+          夏目友人帐 · 温柔小屋 — 用 React + Spring Boot 编织的模块化单体博客
         </p>
         <p className="mt-1 text-xs text-ink-light/70">
           © {new Date().getFullYear()} Natsume Blog · 仅供学习交流 · 插画与封面均为原创

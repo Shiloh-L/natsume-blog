@@ -5,6 +5,7 @@ import PostCard from '../components/PostCard'
 import Loading from '../components/Loading'
 import ErrorState from '../components/ErrorState'
 import { coverOf } from '../utils/cover'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function CategoryPage() {
   const { id } = useParams()
@@ -15,6 +16,7 @@ export default function CategoryPage() {
     queryFn: () => fetchPosts({ categoryId, current: 1, size: 30 }),
   })
   const category = categories?.find((c) => c.id === categoryId)
+  usePageTitle(category?.name ? `分类 · ${category.name}` : '分类')
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">

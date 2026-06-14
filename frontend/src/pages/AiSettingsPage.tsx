@@ -10,6 +10,7 @@ import {
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../store/toastStore'
 import Loading from '../components/Loading'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const PRESETS = [
   { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat' },
@@ -18,6 +19,7 @@ const PRESETS = [
 ]
 
 export default function AiSettingsPage() {
+  usePageTitle('调教猫咪老师')
   const { user, isAdmin } = useAuthStore()
   const navigate = useNavigate()
 
