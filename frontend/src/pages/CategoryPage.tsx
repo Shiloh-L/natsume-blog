@@ -3,13 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchCategories, fetchPosts } from '../api/posts'
 import PostCard from '../components/PostCard'
 import Loading from '../components/Loading'
+import ErrorState from '../components/ErrorState'
 import { coverOf } from '../utils/cover'
 
 export default function CategoryPage() {
   const { id } = useParams()
   const categoryId = Number(id)
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['posts', 'cat', categoryId],
     queryFn: () => fetchPosts({ categoryId, current: 1, size: 30 }),
   })
@@ -33,6 +34,8 @@ export default function CategoryPage() {
 
       {isLoading ? (
         <Loading />
+      ) : isError ? (
+        <ErrorState message="这个分类的文章加载失败了" onRetry={() => refetch()} />
       ) : data?.records.length ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {data.records.map((p, i) => (

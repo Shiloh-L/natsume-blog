@@ -30,7 +30,8 @@ public class NotificationService {
     private final UserResolver userResolver;
 
     public PageResult<NotificationVO> page(Long recipientId, long current, long size) {
-        Page<Notification> page = new Page<>(current, size);
+        Page<Notification> page = new Page<>(com.natsume.blog.common.utils.PageUtil.clampCurrent(current),
+                com.natsume.blog.common.utils.PageUtil.clampSize(size));
         Page<Notification> result = notificationMapper.selectPage(page,
                 new LambdaQueryWrapper<Notification>()
                         .eq(Notification::getRecipientId, recipientId)

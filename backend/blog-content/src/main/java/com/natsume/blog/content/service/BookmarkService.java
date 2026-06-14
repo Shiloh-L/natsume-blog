@@ -111,7 +111,8 @@ public class BookmarkService {
     /** 我的藏书阁：分页返回收藏的文章（按收藏时间倒序） */
     public PageResult<PostVO> myBookmarks(LoginUser user, long current, long size) {
         requireLogin(user);
-        Page<Bookmark> page = new Page<>(current, size);
+        Page<Bookmark> page = new Page<>(com.natsume.blog.common.utils.PageUtil.clampCurrent(current),
+                com.natsume.blog.common.utils.PageUtil.clampSize(size));
         Page<Bookmark> result = bookmarkMapper.selectPage(page, new LambdaQueryWrapper<Bookmark>()
                 .eq(Bookmark::getUserId, user.getUserId())
                 .orderByDesc(Bookmark::getCreateTime));
@@ -122,11 +123,11 @@ public class BookmarkService {
         }
         Map<Long, Post> posts = postMapper.selectBatchIds(postIds).stream()
                 .collect(Collectors.toMap(Post::getId, p -> p));
-        List<PostVO> vos = postIds.stream()
+        List<Post> ordered = postIds.stream()
                 .map(posts::get)
                 .filter(Objects::nonNull)
-                .map(postService::toListVO)
                 .collect(Collectors.toList());
+        List<PostVO> vos = postService.toListVOs(ordered);
         return PageResult.of(vos, result.getTotal(), result.getCurrent(), result.getSize());
     }
 

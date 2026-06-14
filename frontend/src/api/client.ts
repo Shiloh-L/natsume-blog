@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type { Result } from '../types'
+import { toast } from '../store/toastStore'
 
 const baseURL = import.meta.env.VITE_API_BASE ?? ''
 
@@ -23,11 +24,19 @@ http.interceptors.request.use((config) => {
   return config
 })
 
+// 网络错误全局提示，节流避免刷屏
+let lastNetToast = 0
 http.interceptors.response.use(
   (resp) => resp,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('natsume-auth')
+    } else if (!error.response || error.code === 'ECONNABORTED') {
+      const now = Date.now()
+      if (now - lastNetToast > 3000) {
+        lastNetToast = now
+        toast.error('网络连接失败，请稍后重试')
+      }
     }
     return Promise.reject(error)
   },

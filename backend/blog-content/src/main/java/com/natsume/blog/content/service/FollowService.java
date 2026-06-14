@@ -107,14 +107,13 @@ public class FollowService {
         if (followeeIds.isEmpty()) {
             return PageResult.of(Collections.emptyList(), 0, current, size);
         }
-        Page<Post> page = new Page<>(current, size);
+        Page<Post> page = new Page<>(com.natsume.blog.common.utils.PageUtil.clampCurrent(current),
+                com.natsume.blog.common.utils.PageUtil.clampSize(size));
         Page<Post> result = postMapper.selectPage(page, new LambdaQueryWrapper<Post>()
                 .in(Post::getAuthorId, followeeIds)
                 .eq(Post::getStatus, 1)
                 .orderByDesc(Post::getCreateTime));
-        List<PostVO> vos = result.getRecords().stream()
-                .map(postService::toListVO)
-                .collect(Collectors.toList());
+        List<PostVO> vos = postService.toListVOs(result.getRecords());
         return PageResult.of(vos, result.getTotal(), result.getCurrent(), result.getSize());
     }
 

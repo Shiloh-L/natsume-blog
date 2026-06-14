@@ -13,9 +13,11 @@ import ReadingProgress from '../components/ReadingProgress'
 import FollowButton from '../components/FollowButton'
 import BookmarkButton from '../components/BookmarkButton'
 import Loading from '../components/Loading'
+import ErrorState from '../components/ErrorState'
 import { extractHeadings, readingStats } from '../utils/toc'
 import { coverOf } from '../utils/cover'
 import { useAuthStore } from '../store/authStore'
+import { toast } from '../store/toastStore'
 import type { Comment } from '../types'
 
 function CommentItem({ c }: { c: Comment }) {
@@ -61,6 +63,7 @@ function CommentSection({ postId }: { postId: number }) {
       qc.invalidateQueries({ queryKey: ['comments', postId] })
       qc.invalidateQueries({ queryKey: ['post', postId] })
     },
+    onError: (err: any) => toast.error(err?.response?.data?.message || '留言失败了'),
   })
 
   return (
@@ -115,7 +118,7 @@ export default function PostDetailPage() {
   const [summary, setSummary] = useState('')
   const [summarizing, setSummarizing] = useState(false)
 
-  const { data: post, isLoading } = useQuery({
+  const { data: post, isLoading, isError, refetch } = useQuery({
     queryKey: ['post', postId],
     queryFn: () => fetchPost(postId),
   })
@@ -135,6 +138,7 @@ export default function PostDetailPage() {
   const likeMutation = useMutation({
     mutationFn: () => likePost(postId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['post', postId] }),
+    onError: (err: any) => toast.error(err?.response?.data?.message || '点赞失败了'),
   })
 
   const onSummarize = async () => {
@@ -152,7 +156,14 @@ export default function PostDetailPage() {
   const headings = useMemo(() => extractHeadings(post?.content || ''), [post?.content])
   const stats = useMemo(() => readingStats(post?.content || ''), [post?.content])
 
-  if (isLoading || !post) return <Loading />
+  if (isLoading) return <Loading />
+  if (isError || !post)
+    return (
+      <ErrorState
+        message="这篇文章走丢了，或加载失败了"
+        onRetry={isError ? () => refetch() : undefined}
+      />
+    )
 
   return (
     <>

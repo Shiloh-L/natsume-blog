@@ -43,7 +43,8 @@ public class MomentService {
     private static final String ROLE_ADMIN = "ROLE_ADMIN";
 
     public PageResult<MomentVO> page(long current, long size, LoginUser user) {
-        Page<Moment> page = new Page<>(current, size);
+        Page<Moment> page = new Page<>(com.natsume.blog.common.utils.PageUtil.clampCurrent(current),
+                com.natsume.blog.common.utils.PageUtil.clampSize(size));
         Page<Moment> result = momentMapper.selectPage(page,
                 new LambdaQueryWrapper<Moment>().orderByDesc(Moment::getCreateTime));
         List<Moment> moments = result.getRecords();

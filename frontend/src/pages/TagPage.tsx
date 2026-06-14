@@ -4,13 +4,14 @@ import { motion } from 'motion/react'
 import { fetchPosts, fetchTags } from '../api/posts'
 import PostCard from '../components/PostCard'
 import PostCardSkeleton from '../components/PostCardSkeleton'
+import ErrorState from '../components/ErrorState'
 
 export default function TagPage() {
   const { id } = useParams()
   const tagId = Number(id)
 
   const { data: tags } = useQuery({ queryKey: ['tags'], queryFn: fetchTags })
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['posts', 'tag', tagId],
     queryFn: () => fetchPosts({ tagId, current: 1, size: 30 }),
   })
@@ -59,6 +60,8 @@ export default function TagPage() {
             <PostCardSkeleton key={i} />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState message="标签下的文章加载失败了" onRetry={() => refetch()} />
       ) : data?.records.length ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {data.records.map((p, i) => (

@@ -7,6 +7,7 @@ import PostListItem from '../components/PostListItem'
 import PostCardSkeleton from '../components/PostCardSkeleton'
 import SiteAside from '../components/SiteAside'
 import ForestSpirits from '../components/ForestSpirits'
+import ErrorState from '../components/ErrorState'
 
 const SUBTITLES = [
   '记录那些只有我能看见的朋友',
@@ -142,7 +143,7 @@ function Hero() {
 export default function HomePage() {
   const [page, setPage] = useState(1)
   const size = 6
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ['posts', page],
     queryFn: () => fetchPosts({ current: page, size }),
   })
@@ -167,6 +168,8 @@ export default function HomePage() {
                   <PostCardSkeleton key={i} />
                 ))}
               </div>
+            ) : isError ? (
+              <ErrorState message="文章加载失败了" onRetry={() => refetch()} />
             ) : (
               <>
                 <div className="space-y-6">

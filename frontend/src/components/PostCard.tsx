@@ -51,7 +51,7 @@ export default function PostCard({ post, index = 0 }: { post: Post; index?: numb
               <img
                 src="/cat.svg"
                 className="h-5 w-5 rounded-full bg-white/60 p-0.5"
-                alt=""
+                alt={`${post.authorName} 的头像`}
               />
               {post.authorName}
             </span>

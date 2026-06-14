@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchArchive, type ArchiveItem } from '../api/posts'
 import Loading from '../components/Loading'
+import ErrorState from '../components/ErrorState'
 
 interface YearGroup {
   year: string
@@ -23,12 +24,13 @@ function groupByYear(items: ArchiveItem[]): YearGroup[] {
 }
 
 export default function ArchivePage() {
-  const { data, isLoading } = useQuery({ queryKey: ['archive'], queryFn: fetchArchive })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['archive'], queryFn: fetchArchive })
 
   const groups = useMemo(() => groupByYear(data || []), [data])
   const total = data?.length ?? 0
 
   if (isLoading) return <Loading />
+  if (isError) return <ErrorState message="长卷加载失败了" onRetry={() => refetch()} />
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">

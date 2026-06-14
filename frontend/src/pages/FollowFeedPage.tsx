@@ -5,6 +5,7 @@ import { fetchFollowFeed } from '../api/follows'
 import PostCard from '../components/PostCard'
 import PostCardSkeleton from '../components/PostCardSkeleton'
 import { useAuthStore } from '../store/authStore'
+import { toast } from '../store/toastStore'
 import type { Post } from '../types'
 
 export default function FollowFeedPage() {
@@ -17,6 +18,7 @@ export default function FollowFeedPage() {
     setLoading(true)
     fetchFollowFeed(1, 30)
       .then((res) => setPosts(res.records))
+      .catch(() => toast.error('友人近况加载失败了'))
       .finally(() => setLoading(false))
   }, [user])
 

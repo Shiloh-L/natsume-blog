@@ -73,16 +73,17 @@ public class PostService {
         wrapper.orderByDesc(Post::getIsTop).orderByDesc(Post::getCreateTime);
 
         Page<Post> result = postMapper.selectPage(page, wrapper);
-        List<PostVO> vos = result.getRecords().stream().map(p -> toVO(p, false)).collect(Collectors.toList());
+        List<PostVO> vos = toListVOs(result.getRecords());
         return PageResult.of(vos, result.getTotal(), result.getCurrent(), result.getSize());
     }
 
     public PageResult<PostVO> pageMyPosts(Long authorId, long current, long size) {
-        Page<Post> page = new Page<>(current, size);
+        Page<Post> page = new Page<>(com.natsume.blog.common.utils.PageUtil.clampCurrent(current),
+                com.natsume.blog.common.utils.PageUtil.clampSize(size));
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Post::getAuthorId, authorId).orderByDesc(Post::getCreateTime);
         Page<Post> result = postMapper.selectPage(page, wrapper);
-        List<PostVO> vos = result.getRecords().stream().map(p -> toVO(p, false)).collect(Collectors.toList());
+        List<PostVO> vos = toListVOs(result.getRecords());
         return PageResult.of(vos, result.getTotal(), result.getCurrent(), result.getSize());
     }
 
@@ -175,13 +176,38 @@ public class PostService {
 
     public List<PostIndexEvent> allIndexEvents() {
         List<Post> posts = postMapper.selectList(new LambdaQueryWrapper<Post>().eq(Post::getStatus, 1));
+        if (posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+        // 批量分类
+        List<Long> categoryIds = posts.stream().map(Post::getCategoryId)
+                .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        Map<Long, String> categoryNames = categoryIds.isEmpty() ? Map.of()
+                : categoryMapper.selectBatchIds(categoryIds).stream()
+                        .collect(Collectors.toMap(Category::getId, Category::getName));
+        // 批量标签名（按 postId 分组）
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        Map<Long, List<String>> tagNamesByPost = new java.util.HashMap<>();
+        List<Map<String, Object>> pairs = postTagMapper.selectPairs(postIds);
+        if (!pairs.isEmpty()) {
+            List<Long> tagIds = pairs.stream()
+                    .map(p -> ((Number) p.get("tagId")).longValue()).distinct().collect(Collectors.toList());
+            Map<Long, String> tagNameMap = tagMapper.selectBatchIds(tagIds).stream()
+                    .collect(Collectors.toMap(Tag::getId, Tag::getName));
+            for (Map<String, Object> pair : pairs) {
+                Long pid = ((Number) pair.get("postId")).longValue();
+                String tn = tagNameMap.get(((Number) pair.get("tagId")).longValue());
+                if (tn != null) {
+                    tagNamesByPost.computeIfAbsent(pid, k -> new ArrayList<>()).add(tn);
+                }
+            }
+        }
         List<PostIndexEvent> events = new ArrayList<>();
         for (Post post : posts) {
             PostIndexEvent event = new PostIndexEvent();
             BeanUtils.copyProperties(post, event);
-            Category category = post.getCategoryId() == null ? null : categoryMapper.selectById(post.getCategoryId());
-            event.setCategoryName(category == null ? null : category.getName());
-            event.setTags(tagMapper.selectByPostId(post.getId()).stream().map(Tag::getName).collect(Collectors.toList()));
+            event.setCategoryName(post.getCategoryId() == null ? null : categoryNames.get(post.getCategoryId()));
+            event.setTags(tagNamesByPost.getOrDefault(post.getId(), List.of()));
             events.add(event);
         }
         return events;
@@ -231,6 +257,55 @@ public class PostService {
     /** 供其他服务（如关注流）复用的列表VO转换 */
     public PostVO toListVO(Post post) {
         return toVO(post, false);
+    }
+
+    /** 列表场景批量转换 VO：一次性预加载分类、标签、作者，避免逐条 N+1 */
+    public List<PostVO> toListVOs(List<Post> posts) {
+        if (posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+        // 1) 批量分类
+        List<Long> categoryIds = posts.stream().map(Post::getCategoryId)
+                .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        Map<Long, String> categoryNames = categoryIds.isEmpty() ? Map.of()
+                : categoryMapper.selectBatchIds(categoryIds).stream()
+                        .collect(Collectors.toMap(Category::getId, Category::getName));
+        // 2) 批量作者（UserResolver 本身支持批量 + 缓存）
+        List<Long> authorIds = posts.stream().map(Post::getAuthorId)
+                .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        Map<Long, com.natsume.blog.common.dto.UserBrief> authors = userResolver.resolve(authorIds);
+        // 3) 批量标签：先取关系对，再批量取标签，按 postId 分组
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        Map<Long, List<Tag>> tagsByPost = new java.util.HashMap<>();
+        List<Map<String, Object>> pairs = postTagMapper.selectPairs(postIds);
+        if (!pairs.isEmpty()) {
+            List<Long> tagIds = pairs.stream()
+                    .map(p -> ((Number) p.get("tagId")).longValue()).distinct().collect(Collectors.toList());
+            Map<Long, Tag> tagMap = tagMapper.selectBatchIds(tagIds).stream()
+                    .collect(Collectors.toMap(Tag::getId, t -> t));
+            for (Map<String, Object> pair : pairs) {
+                Long pid = ((Number) pair.get("postId")).longValue();
+                Long tid = ((Number) pair.get("tagId")).longValue();
+                Tag tag = tagMap.get(tid);
+                if (tag != null) {
+                    tagsByPost.computeIfAbsent(pid, k -> new ArrayList<>()).add(tag);
+                }
+            }
+        }
+        return posts.stream().map(post -> {
+            PostVO vo = new PostVO();
+            BeanUtils.copyProperties(post, vo);
+            vo.setContent(null);
+            if (post.getCategoryId() != null) {
+                vo.setCategoryName(categoryNames.get(post.getCategoryId()));
+            }
+            com.natsume.blog.common.dto.UserBrief author = authors.get(post.getAuthorId());
+            if (author != null && author.getNickname() != null) {
+                vo.setAuthorName(author.getNickname());
+            }
+            vo.setTags(tagsByPost.getOrDefault(post.getId(), List.of()));
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     private PostVO toVO(Post post, boolean withContent) {

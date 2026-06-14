@@ -5,6 +5,7 @@ import { fetchMyBookmarks } from '../api/bookmarks'
 import PostCard from '../components/PostCard'
 import PostCardSkeleton from '../components/PostCardSkeleton'
 import { useAuthStore } from '../store/authStore'
+import { toast } from '../store/toastStore'
 import type { Post } from '../types'
 
 export default function BookmarksPage() {
@@ -17,6 +18,7 @@ export default function BookmarksPage() {
     setLoading(true)
     fetchMyBookmarks(1, 24)
       .then((res) => setPosts(res.records))
+      .catch(() => toast.error('藏书阁加载失败了'))
       .finally(() => setLoading(false))
   }, [user])
 

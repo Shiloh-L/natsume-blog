@@ -92,7 +92,7 @@ export default function MomentComposer({ onPosted }: { onPosted: () => void }) {
             <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
               {images.map((src, i) => (
                 <div key={i} className="group relative aspect-square">
-                  <img src={src} alt="" className="h-full w-full rounded-lg object-cover" />
+                  <img src={src} alt={`待发布的第 ${i + 1} 张图片`} className="h-full w-full rounded-lg object-cover" />
                   <button
                     onClick={() => removeImage(i)}
                     className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-nyanko-red text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"

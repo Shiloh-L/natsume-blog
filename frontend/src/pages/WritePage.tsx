@@ -324,7 +324,7 @@ export default function WritePage() {
             className="flex flex-1 cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-matcha/40 bg-white/60 px-4 py-2.5 text-sm text-ink-light hover:bg-white"
           >
             {cover ? (
-              <img src={cover} alt="" className="h-9 w-14 rounded object-cover" />
+              <img src={cover} alt="封面预览" className="h-9 w-14 rounded object-cover" />
             ) : (
               <span>🖼️</span>
             )}
