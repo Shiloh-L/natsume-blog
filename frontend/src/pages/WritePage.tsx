@@ -13,6 +13,7 @@ import {
   continueStreamUrl,
   polish,
   streamSSE,
+  suggestMeta,
   suggestTags,
   suggestTitles,
   summarize,
@@ -178,17 +179,50 @@ export default function WritePage() {
     setContent('')
     setMode('split')
     abortRef.current = new AbortController()
+    let body = ''
     try {
       await streamSSE(
         writeArticleStreamUrl(t, style, categories?.find((c) => c.id === categoryId)?.name),
-        (chunk) => setContent((prev) => prev + chunk),
+        (chunk) => {
+          body += chunk
+          setContent((prev) => prev + chunk)
+        },
         abortRef.current.signal,
       )
-      toast.success('生成完成，可继续编辑')
     } catch {
       toast.error('AI 生成失败，请确认大模型可用')
-    } finally {
       setGenerating(false)
+      return
+    }
+    setGenerating(false)
+
+    // 一键成文：正文写完后自动补齐标题/摘要/分类/标签
+    if (!body.trim()) return
+    setBusy(true)
+    toast.info('正文已生成，正在补全标题与标签…')
+    try {
+      const meta = await suggestMeta(body, (categories || []).map((c) => c.name))
+      if (meta.title) setTitle(meta.title)
+      if (meta.summary) setSummary(meta.summary)
+      if (meta.category && categories) {
+        const matched = categories.find(
+          (c) => c.name === meta.category || meta.category!.includes(c.name) || c.name.includes(meta.category!),
+        )
+        if (matched) setCategoryId(matched.id)
+      }
+      if (meta.tags?.length && tags) {
+        const matched = tags.filter((tg) =>
+          meta.tags!.some((n) => n.includes(tg.name) || tg.name.includes(n)),
+        )
+        if (matched.length) {
+          setTagIds((arr) => Array.from(new Set([...arr, ...matched.map((tg) => tg.id)])))
+        }
+      }
+      toast.success('一键成文完成，已为你设置好标题/分类/标签/摘要 🐱')
+    } catch {
+      toast.info('正文已生成，但自动补全元信息失败，可手动设置')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -329,8 +363,8 @@ export default function WritePage() {
   const previewVisible = mode !== 'edit'
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 pb-28">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="mx-auto max-w-[1600px] px-4 py-8 pb-28 xl:px-8">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* 主编辑区 */}
         <div className="min-w-0">
           <input
@@ -458,10 +492,13 @@ export default function WritePage() {
                     </button>
                   ) : (
                     <button onClick={aiGenerate} className="ghibli-btn-primary whitespace-nowrap text-sm">
-                      ✨ 帮我写
+                      ✨ 一键成文
                     </button>
                   )}
                 </div>
+                <p className="text-[11px] leading-snug text-ink-light">
+                  「一键成文」会写好正文，并自动设置标题、分类、标签与摘要 ✨
+                </p>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <button onClick={aiContinue} disabled={generating} className="rounded-lg bg-white/70 px-2 py-1.5 text-ink-soft ring-1 ring-ink/10 hover:bg-white disabled:opacity-50">➕ 续写</button>
                   <button onClick={aiPolish} disabled={busy || generating} className="rounded-lg bg-white/70 px-2 py-1.5 text-ink-soft ring-1 ring-ink/10 hover:bg-white disabled:opacity-50">💧 润色</button>
@@ -577,7 +614,7 @@ export default function WritePage() {
 
       {/* 底部常驻操作栏 */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-ink/5 bg-paper-warm/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3 xl:px-8">
           <span className="text-sm font-medium text-ink">
             {editId ? '编辑文章' : '写下你的故事'}
           </span>

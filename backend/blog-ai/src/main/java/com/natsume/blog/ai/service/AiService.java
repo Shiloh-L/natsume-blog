@@ -1,7 +1,10 @@
 package com.natsume.blog.ai.service;
 
+import com.natsume.blog.ai.dto.ArticleMetaVO;
 import com.natsume.blog.ai.dto.AskResponse;
 import com.natsume.blog.ai.dto.RetrievedDoc;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.natsume.blog.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -113,6 +116,56 @@ public class AiService {
             if (!str.isBlank() && str.length() <= 10) tags.add(str);
         }
         return tags;
+    }
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    /** 一键成文：根据正文一次性生成 标题/摘要/分类/标签 */
+    public ArticleMetaVO suggestMeta(String content, List<String> categoryNames) {
+        String cats = categoryNames == null || categoryNames.isEmpty()
+                ? "随笔" : String.join("、", categoryNames);
+        String prompt = """
+                你是博客编辑助手。请根据下面的文章正文生成元信息。
+                严格只输出一个 JSON 对象，不要 Markdown 代码块、不要任何多余文字：
+                {"title":"一个吸引人的中文标题","summary":"不超过80字的温柔摘要","category":"从可选分类里选最贴切的一个","tags":["标签1","标签2","标签3"]}
+                可选分类（category 必须从中选一个）：%s
+                正文：
+                %s
+                """.formatted(cats, clip(content, 3000));
+        String raw = chatClient().prompt().user(prompt).call().content();
+        return parseMeta(raw);
+    }
+
+    private ArticleMetaVO parseMeta(String raw) {
+        ArticleMetaVO vo = new ArticleMetaVO();
+        if (raw == null) {
+            return vo;
+        }
+        // 去掉可能的 ```json ``` 围栏，截取第一个 { 到最后一个 }
+        String s = raw.replaceAll("(?s)```json", "").replaceAll("```", "").trim();
+        int start = s.indexOf('{');
+        int end = s.lastIndexOf('}');
+        if (start < 0 || end <= start) {
+            return vo;
+        }
+        try {
+            JsonNode node = OBJECT_MAPPER.readTree(s.substring(start, end + 1));
+            if (node.hasNonNull("title")) vo.setTitle(node.get("title").asText().trim());
+            if (node.hasNonNull("summary")) vo.setSummary(node.get("summary").asText().trim());
+            if (node.hasNonNull("category")) vo.setCategory(node.get("category").asText().trim());
+            List<String> tags = new ArrayList<>();
+            JsonNode tagsNode = node.get("tags");
+            if (tagsNode != null && tagsNode.isArray()) {
+                tagsNode.forEach(t -> {
+                    String tag = t.asText().replaceAll("[#\\s]", "").trim();
+                    if (!tag.isBlank()) tags.add(tag);
+                });
+            }
+            vo.setTags(tags);
+        } catch (Exception e) {
+            log.warn("解析 AI 元信息失败: {}", e.getMessage());
+        }
+        return vo;
     }
 
     /* ---------------- RAG 问答 ---------------- */

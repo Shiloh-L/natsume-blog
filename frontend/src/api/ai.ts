@@ -16,6 +16,15 @@ export const suggestTitles = (text: string) =>
 export const suggestTags = (content: string) =>
   unwrap<string[]>(http.post<Result<string[]>>('/api/ai/tags', { content }))
 
+export interface ArticleMeta {
+  title?: string
+  summary?: string
+  category?: string
+  tags?: string[]
+}
+export const suggestMeta = (content: string, categories: string[]) =>
+  unwrap<ArticleMeta>(http.post<Result<ArticleMeta>>('/api/ai/metadata', { content, categories }))
+
 export interface Citation {
   postId: number
   title: string

@@ -91,6 +91,13 @@ public class AiController {
         return Result.success(aiService.suggestTags(req.getContent()));
     }
 
+    @Operation(summary = "一键成文：根据正文生成标题/摘要/分类/标签")
+    @PostMapping("/metadata")
+    public Result<com.natsume.blog.ai.dto.ArticleMetaVO> metadata(
+            @RequestBody com.natsume.blog.ai.dto.MetaRequest req) {
+        return Result.success(aiService.suggestMeta(req.getContent(), req.getCategories()));
+    }
+
     /* ---------------- RAG 问答 ---------------- */
 
     @Operation(summary = "基于博客内容的 RAG 问答")
