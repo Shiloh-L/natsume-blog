@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createPost,
+  createTag,
   fetchCategories,
   fetchPost,
   fetchTags,
@@ -35,6 +36,7 @@ export default function WritePage() {
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
   const { data: tags } = useQuery({ queryKey: ['tags'], queryFn: fetchTags })
+  const qc = useQueryClient()
 
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
@@ -52,6 +54,8 @@ export default function WritePage() {
   const [generating, setGenerating] = useState(false)
   const [titleIdeas, setTitleIdeas] = useState<string[]>([])
   const [aiOpen, setAiOpen] = useState(true)
+  const [newTag, setNewTag] = useState('')
+  const [creatingTag, setCreatingTag] = useState(false)
 
   const abortRef = useRef<AbortController | null>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -87,6 +91,30 @@ export default function WritePage() {
 
   const toggleTag = (id: number) =>
     setTagIds((arr) => (arr.includes(id) ? arr.filter((t) => t !== id) : [...arr, id]))
+
+  const addNewTag = async () => {
+    const name = newTag.trim().replace(/^#/, '').trim()
+    if (!name) return
+    // 已存在则直接选中，不重复创建
+    const existing = tags?.find((t) => t.name === name)
+    if (existing) {
+      setTagIds((arr) => Array.from(new Set([...arr, existing.id])))
+      setNewTag('')
+      return
+    }
+    setCreatingTag(true)
+    try {
+      const id = await createTag(name)
+      await qc.invalidateQueries({ queryKey: ['tags'] })
+      setTagIds((arr) => Array.from(new Set([...arr, id])))
+      setNewTag('')
+      toast.success(`已新建标签「${name}」`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || '创建标签失败')
+    } finally {
+      setCreatingTag(false)
+    }
+  }
 
   /* ---------------- Markdown 工具栏 ---------------- */
 
@@ -596,6 +624,28 @@ export default function WritePage() {
                     # {t.name}
                   </button>
                 ))}
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      addNewTag()
+                    }
+                  }}
+                  maxLength={20}
+                  placeholder="输入新标签，回车添加"
+                  className="flex-1 rounded-full bg-white/80 px-3 py-1.5 text-xs outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
+                />
+                <button
+                  onClick={addNewTag}
+                  disabled={creatingTag || !newTag.trim()}
+                  className="shrink-0 rounded-full bg-matcha-light/40 px-3 py-1.5 text-xs text-matcha-deep ring-1 ring-matcha/20 hover:bg-matcha-light/60 disabled:opacity-50"
+                >
+                  {creatingTag ? '添加中…' : '+ 新建'}
+                </button>
               </div>
             </div>
 

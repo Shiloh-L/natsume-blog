@@ -56,6 +56,9 @@ export const fetchCategories = () =>
 export const fetchTags = () =>
   unwrap<Tag[]>(http.get<Result<Tag[]>>('/api/tags'))
 
+export const createTag = (name: string) =>
+  unwrap<number>(http.post<Result<number>>('/api/tags', { name }))
+
 export interface ArchiveItem {
   id: number
   title: string
