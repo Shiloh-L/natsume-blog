@@ -15,7 +15,7 @@ const NAV = [
 ]
 
 export default function Navbar() {
-  const { user, clear } = useAuthStore()
+  const { user, clear, isAdmin } = useAuthStore()
   const [keyword, setKeyword] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
@@ -117,6 +117,11 @@ export default function Navbar() {
                     <Link to="/bookmarks" className="block rounded-xl px-3 py-1.5 text-ink-soft hover:bg-paper-deep">
                       藏书阁
                     </Link>
+                    {isAdmin() && (
+                      <Link to="/admin/ai" className="block rounded-xl px-3 py-1.5 text-ink-soft hover:bg-paper-deep">
+                        🐱 AI 设置
+                      </Link>
+                    )}
                     <button
                       onClick={onLogout}
                       className="w-full rounded-xl px-3 py-1.5 text-left text-nyanko-deep hover:bg-paper-deep"
@@ -229,6 +234,11 @@ export default function Navbar() {
                       <Link to="/bookmarks" className="block rounded-xl px-4 py-2.5 text-ink-soft hover:bg-matcha-light/30 hover:text-matcha-deep">
                         🍁 藏书阁
                       </Link>
+                      {isAdmin() && (
+                        <Link to="/admin/ai" className="block rounded-xl px-4 py-2.5 text-ink-soft hover:bg-matcha-light/30 hover:text-matcha-deep">
+                          🐱 AI 设置
+                        </Link>
+                      )}
                     </>
                   )}
                 </nav>

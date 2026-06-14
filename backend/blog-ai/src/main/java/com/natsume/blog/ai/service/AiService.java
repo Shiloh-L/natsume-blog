@@ -5,7 +5,6 @@ import com.natsume.blog.ai.dto.RetrievedDoc;
 import com.natsume.blog.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -29,35 +28,32 @@ public class AiService {
             内容真挚、有画面感，避免空话套话。只输出文章正文，不要额外解释。
             """;
 
-    private final ChatClient chatClient;
+    private final AiConfigService aiConfigService;
     private final SearchClient searchClient;
 
-    public AiService(ChatClient.Builder builder, SearchClient searchClient) {
-        // 禁用 Spring AI 的内部工具执行：本机 LLM 网关可能向模型注入外部工具（如 task_complete），
-        // 模型一旦返回 tool_calls，框架会因找不到对应 ToolCallback 而抛 500。
-        // 关闭后框架不再尝试执行工具，直接返回文本内容，保证写作/摘要/问答稳定可用。
-        this.chatClient = builder
-                .defaultOptions(OpenAiChatOptions.builder()
-                        .internalToolExecutionEnabled(false)
-                        .build())
-                .build();
+    public AiService(AiConfigService aiConfigService, SearchClient searchClient) {
+        this.aiConfigService = aiConfigService;
         this.searchClient = searchClient;
+    }
+
+    private ChatClient chatClient() {
+        return aiConfigService.chatClient();
     }
 
     /* ---------------- 对话 ---------------- */
 
     public String chat(String message) {
-        return chatClient.prompt().system(SYSTEM_PROMPT).user(message).call().content();
+        return chatClient().prompt().system(SYSTEM_PROMPT).user(message).call().content();
     }
 
     public Flux<String> stream(String message) {
-        return chatClient.prompt().system(SYSTEM_PROMPT).user(message).stream().content();
+        return chatClient().prompt().system(SYSTEM_PROMPT).user(message).stream().content();
     }
 
     /* ---------------- 写作辅助 ---------------- */
 
     public String summarize(String content) {
-        return chatClient.prompt()
+        return chatClient().prompt()
                 .user(u -> u.text("请用不超过 80 字，为下面这篇博客文章生成一段温柔、引人入胜的摘要，直接输出摘要内容：\n\n{article}")
                         .param("article", clip(content, 4000)))
                 .call().content();
@@ -72,12 +68,12 @@ public class AiService {
                 风格：%s；分类：%s。
                 字数 500-900 字，结构清晰，富有画面感。
                 """.formatted(topic, s, c);
-        return chatClient.prompt().system(WRITER_SYSTEM).user(user).stream().content();
+        return chatClient().prompt().system(WRITER_SYSTEM).user(user).stream().content();
     }
 
     /** 续写 */
     public Flux<String> continueWriting(String existing) {
-        return chatClient.prompt().system(WRITER_SYSTEM)
+        return chatClient().prompt().system(WRITER_SYSTEM)
                 .user(u -> u.text("请承接下面的内容自然地继续写下去，保持文风一致，只输出续写的部分：\n\n{text}")
                         .param("text", clip(existing, 4000)))
                 .stream().content();
@@ -85,7 +81,7 @@ public class AiService {
 
     /** 润色 */
     public String polish(String content) {
-        return chatClient.prompt().system(WRITER_SYSTEM)
+        return chatClient().prompt().system(WRITER_SYSTEM)
                 .user(u -> u.text("请在保持原意的前提下润色下面的文字，使其更优美流畅，直接输出润色后的 Markdown：\n\n{text}")
                         .param("text", clip(content, 4000)))
                 .call().content();
@@ -93,7 +89,7 @@ public class AiService {
 
     /** 根据主题/正文生成标题候选 */
     public List<String> suggestTitles(String topicOrContent) {
-        String raw = chatClient.prompt()
+        String raw = chatClient().prompt()
                 .user(u -> u.text("根据以下内容，生成 5 个吸引人的中文博客标题，每行一个，不要序号、不要多余符号：\n\n{text}")
                         .param("text", clip(topicOrContent, 2000)))
                 .call().content();
@@ -107,7 +103,7 @@ public class AiService {
 
     /** 根据正文推荐标签 */
     public List<String> suggestTags(String content) {
-        String raw = chatClient.prompt()
+        String raw = chatClient().prompt()
                 .user(u -> u.text("根据以下文章内容，推荐 3-6 个简短的中文标签，用英文逗号分隔，只输出标签：\n\n{text}")
                         .param("text", clip(content, 2000)))
                 .call().content();
@@ -149,7 +145,7 @@ public class AiService {
                 %s
                 """.formatted(context, question);
 
-        String answer = chatClient.prompt().system(SYSTEM_PROMPT).user(prompt).call().content();
+        String answer = chatClient().prompt().system(SYSTEM_PROMPT).user(prompt).call().content();
         resp.setAnswer(answer);
         resp.setCitations(citations);
         return resp;

@@ -18,6 +18,7 @@ import FollowFeedPage from './pages/FollowFeedPage'
 import BookmarksPage from './pages/BookmarksPage'
 import ArchivePage from './pages/ArchivePage'
 import TagPage from './pages/TagPage'
+import AiSettingsPage from './pages/AiSettingsPage'
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/write" element={<WritePage />} />
           <Route path="/me" element={<UserCenterPage />} />
+          <Route path="/admin/ai" element={<AiSettingsPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </main>

@@ -153,8 +153,10 @@ pwsh deploy/nacos/publish-config.ps1
 
 `blog-ai` 通过 OpenAI 兼容协议接入大模型，默认 **DeepSeek**（`https://api.deepseek.com`，模型 `deepseek-chat`）。
 
-通过环境变量覆盖：`LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY`。
-> 🔑 **密钥安全**：`LLM_API_KEY` 不写入仓库——复制 `.env.example` 为 `.env` 并填入真实 key（`.env` 已被 `.gitignore` 忽略），`docker-compose.app.yml` 通过 `${LLM_API_KEY}` 引用。
+**后台可视化配置（管理员）**：在「🐱 AI 设置」页可改 base-url / 模型 / 温度 / 密钥并**运行时热生效**（无需重启）——配置持久化于 `t_ai_config`，更新后立即重建 ChatClient。提供 DeepSeek / OpenAI / 本机网关快速预设与连通性测试。
+
+环境变量仍可覆盖默认：`LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY`。
+> 🔑 **密钥安全**：`LLM_API_KEY` 不写入仓库——复制 `.env.example` 为 `.env` 并填入真实 key（`.env` 已被 `.gitignore` 忽略）。后台填的密钥仅存服务端数据库；DB 留空时回退到环境变量。
 
 ---
 
