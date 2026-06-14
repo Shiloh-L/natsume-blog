@@ -22,6 +22,7 @@ import {
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../store/toastStore'
 import MarkdownView from '../components/MarkdownView'
+import Select from '../components/Select'
 import { readingStats } from '../utils/toc'
 
 type Mode = 'edit' | 'split' | 'preview'
@@ -476,16 +477,17 @@ export default function WritePage() {
                   className="w-full rounded-xl bg-white/80 px-3 py-2 text-sm outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
                 />
                 <div className="flex gap-2">
-                  <select
+                  <Select
                     value={style}
-                    onChange={(e) => setStyle(e.target.value)}
-                    className="flex-1 rounded-xl bg-white/80 px-3 py-2 text-sm outline-none ring-1 ring-ink/10"
-                  >
-                    <option>治愈温柔</option>
-                    <option>诗意散文</option>
-                    <option>技术干货</option>
-                    <option>幽默轻松</option>
-                  </select>
+                    onChange={setStyle}
+                    className="flex-1"
+                    options={[
+                      { value: '治愈温柔', label: '治愈温柔' },
+                      { value: '诗意散文', label: '诗意散文' },
+                      { value: '技术干货', label: '技术干货' },
+                      { value: '幽默轻松', label: '幽默轻松' },
+                    ]}
+                  />
                   {generating ? (
                     <button onClick={stopGenerate} className="ghibli-btn-ghost whitespace-nowrap text-sm">
                       ⏹ 停止
@@ -532,16 +534,15 @@ export default function WritePage() {
 
             <div>
               <label className="mb-1 block text-xs text-ink-light">分类</label>
-              <select
-                value={categoryId ?? ''}
-                onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full rounded-xl bg-white/80 px-3 py-2 text-sm outline-none ring-1 ring-ink/10"
-              >
-                <option value="">选择分类</option>
-                {categories?.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <Select
+                value={categoryId != null ? String(categoryId) : ''}
+                onChange={(v) => setCategoryId(v ? Number(v) : undefined)}
+                placeholder="选择分类"
+                options={[
+                  { value: '', label: '未分类' },
+                  ...(categories?.map((c) => ({ value: String(c.id), label: c.name })) ?? []),
+                ]}
+              />
             </div>
 
             <div>
