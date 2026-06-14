@@ -44,6 +44,11 @@ management:
   metrics:
     tags:
       application: blog-auth
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 50ms,100ms,200ms,500ms,1s,2s
 
 knife4j:
   enable: true

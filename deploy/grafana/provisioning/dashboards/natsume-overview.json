@@ -1,44 +1,210 @@
 {
   "annotations": { "list": [] },
   "editable": true,
-  "title": "夏目博客 · 微服务概览",
+  "title": "夏目博客 · 微服务监控大盘",
   "uid": "natsume-blog",
   "tags": ["natsume", "blog"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "time": { "from": "now-30m", "to": "now" },
   "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "name": "app",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(http_server_requests_seconds_count, application)",
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" },
+        "label": "服务"
+      }
+    ]
+  },
   "panels": [
     {
-      "type": "timeseries",
-      "title": "HTTP 请求速率 (req/s)",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "type": "row",
+      "title": "总览",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "type": "stat",
+      "title": "总请求速率",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 1, "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value" },
       "targets": [
         {
-          "expr": "sum by (application) (rate(http_server_requests_seconds_count[1m]))",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[1m]))"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "错误率 (5xx+4xx)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 } ] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "100 * sum(rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"[45]..\", uri!~\"/actuator.*\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[5m])), 0.001)"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "全局 P95 延迟",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 1 } ] }
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application=~\"$app\", uri!~\"/actuator.*\"}[5m])))"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "近5分钟错误日志数",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(increase(logback_events_total{application=~\"$app\", level=\"error\"}[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "请求性能",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }
+    },
+    {
+      "type": "timeseries",
+      "title": "各服务请求速率 (req/s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "showPoints": "never" } } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (application) (rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[1m]))",
           "legendFormat": "{{application}}"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "请求 P95 延迟 (s)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "title": "请求延迟 P95 / P99 (s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 5, "showPoints": "never" } } },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le, application) (rate(http_server_requests_seconds_bucket[5m])))",
-          "legendFormat": "{{application}}"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~\"$app\", uri!~\"/actuator.*\"}[5m])))",
+          "legendFormat": "P95 {{application}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.99, sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~\"$app\", uri!~\"/actuator.*\"}[5m])))",
+          "legendFormat": "P99 {{application}}"
         }
       ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP 状态码分布 (req/s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 30, "stacking": { "mode": "normal" }, "showPoints": "never" } } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[1m]))",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "最慢接口 Top 10 (平均耗时)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "decimals": 3, "custom": { "align": "auto" } }
+      },
+      "options": { "showHeader": true, "sortBy": [ { "displayName": "平均耗时", "desc": true } ] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "format": "table",
+          "instant": true,
+          "expr": "topk(10, sum by (application, uri) (rate(http_server_requests_seconds_sum{application=~\"$app\", uri!~\"/actuator.*\"}[5m])) / clamp_min(sum by (application, uri) (rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[5m])), 0.0001))"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "application": "服务", "uri": "接口", "Value": "平均耗时" } } }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "JVM & 资源",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 }
     },
     {
       "type": "timeseries",
       "title": "JVM 堆内存使用 (bytes)",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 23 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10, "showPoints": "never" } } },
       "targets": [
         {
-          "expr": "sum by (application) (jvm_memory_used_bytes{area=\"heap\"})",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (application) (jvm_memory_used_bytes{application=~\"$app\", area=\"heap\"})",
+          "legendFormat": "{{application}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU 使用率",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 23 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "fillOpacity": 10, "showPoints": "never" } } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "process_cpu_usage{application=~\"$app\"}",
           "legendFormat": "{{application}}"
         }
       ]
@@ -46,11 +212,57 @@
     {
       "type": "timeseries",
       "title": "存活线程数",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 23 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 5, "showPoints": "never" } } },
       "targets": [
         {
-          "expr": "jvm_threads_live_threads",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "jvm_threads_live_threads{application=~\"$app\"}",
           "legendFormat": "{{application}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "日志 & 数据库连接池",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 }
+    },
+    {
+      "type": "timeseries",
+      "title": "日志事件速率（warn / error）",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" }, "showPoints": "never" } } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (level) (rate(logback_events_total{application=~\"$app\", level=~\"warn|error\"}[1m]))",
+          "legendFormat": "{{level}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HikariCP 数据库连接（active / idle / pending）",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 5, "showPoints": "never" } } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (application) (hikaricp_connections_active{application=~\"$app\"})",
+          "legendFormat": "active {{application}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (application) (hikaricp_connections_idle{application=~\"$app\"})",
+          "legendFormat": "idle {{application}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (application) (hikaricp_connections_pending{application=~\"$app\"})",
+          "legendFormat": "pending {{application}}"
         }
       ]
     }

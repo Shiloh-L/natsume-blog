@@ -83,6 +83,11 @@ management:
   metrics:
     tags:
       application: blog-content
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 50ms,100ms,200ms,500ms,1s,2s
 
 # Knife4j API 文档
 knife4j:

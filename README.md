@@ -30,7 +30,7 @@
 - 🍁 **收藏 · 藏书阁**：给珍视的文章夹上书签收藏，「藏书阁」集中回看；收藏态以 **Redis Set** 缓存（Cache-Aside，空集合占位防穿透）
 - 🖼️ 图片：MinIO 对象存储上传（写文章支持拖拽上传封面）
 - ⚡ **多级缓存**：Caffeine(L1) + Redis(L2)；高频浏览量经 **Kafka** 异步聚合落库
-- 🛡️ 治理 & 可观测：Nacos 注册/配置、Gateway 网关鉴权、Sentinel 限流、OpenFeign、RabbitMQ、**OpenTelemetry 链路追踪 → Grafana Tempo**、**Prometheus + Grafana 监控大盘**
+- 🛡️ 治理 & 可观测：Nacos 注册/配置、Gateway 网关鉴权、Sentinel 限流、OpenFeign、RabbitMQ、**OpenTelemetry 链路追踪 → Grafana Tempo**、**Prometheus + Grafana 监控大盘**（请求速率/错误率/P95·P99 延迟/最慢接口 Top10/JVM·CPU/日志级别/连接池，按服务下钻）
 - 🪵 **统一日志**：全服务 Logback 滚动文件日志（全量/错误分离、gz 压缩、按天+大小滚动）；请求日志过滤器记录每请求方法/路径/状态/耗时 + traceId（MDC），慢请求自动 WARN 告警
 
 ---
