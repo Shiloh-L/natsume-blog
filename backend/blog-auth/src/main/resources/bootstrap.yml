@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: blog-auth
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_HOST:localhost}:8848
+      config:
+        server-addr: ${NACOS_HOST:localhost}:8848
+        file-extension: yaml
+        import-check:
+          enabled: false
+  config:
+    import:
+      - optional:nacos:shared-blog.yaml
+      - optional:nacos:blog-auth.yaml

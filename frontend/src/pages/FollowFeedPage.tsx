@@ -1,0 +1,67 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { motion } from 'motion/react'
+import { fetchFollowFeed } from '../api/follows'
+import PostCard from '../components/PostCard'
+import PostCardSkeleton from '../components/PostCardSkeleton'
+import { useAuthStore } from '../store/authStore'
+import type { Post } from '../types'
+
+export default function FollowFeedPage() {
+  const { user } = useAuthStore()
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) return
+    setLoading(true)
+    fetchFollowFeed(1, 30)
+      .then((res) => setPosts(res.records))
+      .finally(() => setLoading(false))
+  }, [user])
+
+  if (!user) {
+    return (
+      <div className="py-24 text-center text-ink-soft">
+        请先 <Link to="/login" className="text-matcha-deep underline">登录</Link>，再翻开你的友人帐 🦋
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 text-center"
+      >
+        <div className="mb-2 flex items-center justify-center gap-3 text-ink-light">
+          <span className="h-px w-10 bg-ink/15" />
+          <span className="text-xl">🦋</span>
+          <span className="h-px w-10 bg-ink/15" />
+        </div>
+        <h1 className="brush-title text-4xl text-ink">友人近况</h1>
+        <p className="mt-2 text-sm text-ink-soft">你写进友人帐的人，近来都记下了些什么</p>
+      </motion.div>
+
+      {loading ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <PostCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : posts.length === 0 ? (
+        <div className="py-16 text-center text-ink-light">
+          <p>友人帐还空着，或他们尚未写下新的故事 🍃</p>
+          <Link to="/" className="ghibli-btn-ghost mt-4 inline-flex">去结识几位友人</Link>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {posts.map((p, i) => (
+            <PostCard key={p.id} post={p} index={i} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

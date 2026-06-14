@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none">
+  <defs>
+    <linearGradient id="s5sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b9c6c4"/>
+      <stop offset="1" stop-color="#e7e6da"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#s5sky)"/>
+  <g stroke="#9bb0b4" stroke-width="2" stroke-linecap="round" opacity="0.7">
+    <path d="M120 40 L100 120"/><path d="M220 20 L200 110"/><path d="M340 50 L320 130"/>
+    <path d="M460 25 L440 115"/><path d="M580 45 L560 125"/><path d="M680 20 L660 110"/>
+    <path d="M170 90 L150 170"/><path d="M400 90 L380 170"/><path d="M630 90 L610 170"/>
+    <path d="M280 120 L260 200"/><path d="M520 120 L500 200"/><path d="M720 120 L700 200"/>
+  </g>
+  <g fill="#5e7c5a" opacity="0.85">
+    <path d="M150 360 L186 240 L222 360 Z"/>
+    <path d="M560 360 L600 230 L640 360 Z"/>
+  </g>
+  <g fill="#8fae7b" opacity="0.8">
+    <path d="M340 380 L376 280 L412 380 Z"/>
+  </g>
+  <path d="M0 360 C200 332 360 392 560 360 C680 342 760 372 800 362 L800 450 L0 450 Z" fill="#6b7d6a"/>
+  <ellipse cx="400" cy="420" rx="260" ry="18" fill="#9bb0b4" opacity="0.5"/>
+</svg>

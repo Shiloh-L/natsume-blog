@@ -1,0 +1,69 @@
+server:
+  port: 8080
+
+spring:
+  codec:
+    max-in-memory-size: 50MB
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: blog-auth
+          uri: lb://blog-auth
+          predicates:
+            - Path=/api/auth/**,/api/users/**
+        - id: blog-content
+          uri: lb://blog-content
+          predicates:
+            - Path=/api/posts/**,/api/categories/**,/api/tags/**,/api/comments/**,/api/files/**,/api/moments/**,/api/notifications/**,/api/follows/**,/api/bookmarks/**
+        - id: blog-search
+          uri: lb://blog-search
+          predicates:
+            - Path=/api/search/**
+        - id: blog-ai
+          uri: lb://blog-ai
+          predicates:
+            - Path=/api/ai/**
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_HOST:localhost}:8858
+      eager: true
+      scg:
+        fallback:
+          mode: response
+          response-status: 429
+          response-body: '{"code":1029,"message":"请求过于频繁，请稍后再试","data":null}'
+
+jwt:
+  secret: natsume-book-of-friends-secret-key-please-change-2024
+  expire: 604800
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: blog-gateway
+
+logging:
+  level:
+    com.natsume.blog.gateway: info
+    org.springframework.cloud.gateway: info

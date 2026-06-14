@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none">
+  <defs>
+    <linearGradient id="s3sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3f5b78"/>
+      <stop offset="0.55" stop-color="#7bb0c4"/>
+      <stop offset="1" stop-color="#d7ecf2"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#s3sky)"/>
+  <circle cx="610" cy="120" r="46" fill="#f7eedd" opacity="0.92"/>
+  <circle cx="596" cy="112" r="40" fill="#7bb0c4" opacity="0.55"/>
+  <g fill="#fff">
+    <circle cx="120" cy="80" r="2.2"/><circle cx="200" cy="140" r="1.8"/>
+    <circle cx="300" cy="70" r="2.4"/><circle cx="420" cy="120" r="1.6"/>
+    <circle cx="160" cy="200" r="1.6"/><circle cx="500" cy="60" r="2"/>
+    <circle cx="700" cy="200" r="1.8"/><circle cx="360" cy="180" r="1.6"/>
+    <circle cx="250" cy="230" r="1.4"/><circle cx="80" cy="150" r="1.6"/>
+  </g>
+  <path d="M0 320 C200 280 360 350 560 312 C680 290 740 320 800 308 L800 450 L0 450 Z" fill="#3a5550"/>
+  <path d="M0 366 C220 336 460 392 700 366 L800 366 L800 450 L0 450 Z" fill="#26403a"/>
+</svg>

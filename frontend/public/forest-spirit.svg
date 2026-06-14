@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" fill="none">
+  <!-- 森灵 · 原创森林守护者：唤起宫崎骏式的森林精灵气质，非任何版权角色 -->
+  <ellipse cx="60" cy="132" rx="34" ry="6" fill="#4A3F35" opacity="0.12"/>
+
+  <!-- 举着的叶伞 -->
+  <g>
+    <path d="M60 8 C60 8 92 14 92 34 C76 30 60 30 60 30 Z" fill="#8FAE7B"/>
+    <path d="M60 8 C60 8 28 14 28 34 C44 30 60 30 60 30 Z" fill="#A9C58D"/>
+    <path d="M60 9 L60 32" stroke="#5E7C5A" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M60 30 L60 44" stroke="#6B5D4F" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+
+  <!-- 耳朵（叶形，区别于尖耳） -->
+  <path d="M34 52 C30 36 40 32 46 44 C42 48 38 50 36 54 Z" fill="#8a9a86"/>
+  <path d="M86 52 C90 36 80 32 74 44 C78 48 82 50 84 54 Z" fill="#8a9a86"/>
+
+  <!-- 身体 -->
+  <path d="M60 40 C86 40 98 64 98 92 C98 118 82 132 60 132 C38 132 22 118 22 92 C22 64 34 40 60 40 Z" fill="#9aa89a"/>
+  <!-- 肚皮 -->
+  <path d="M60 60 C76 60 84 78 84 96 C84 116 73 126 60 126 C47 126 36 116 36 96 C36 78 44 60 60 60 Z" fill="#f3ece0"/>
+
+  <!-- 肚皮上的蕨叶纹（原创，非箭形纹） -->
+  <g stroke="#bcae98" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.8">
+    <path d="M60 74 L60 112"/>
+    <path d="M60 80 C56 78 53 79 51 82"/>
+    <path d="M60 80 C64 78 67 79 69 82"/>
+    <path d="M60 90 C55 88 51 89 48 93"/>
+    <path d="M60 90 C65 88 69 89 72 93"/>
+    <path d="M60 100 C56 98 53 99 51 102"/>
+    <path d="M60 100 C64 98 67 99 69 102"/>
+  </g>
+
+  <!-- 眼睛 -->
+  <circle cx="48" cy="70" r="5.4" fill="#fff"/>
+  <circle cx="72" cy="70" r="5.4" fill="#fff"/>
+  <circle cx="48.6" cy="70.6" r="3" fill="#4A3F35"/>
+  <circle cx="71.4" cy="70.6" r="3" fill="#4A3F35"/>
+  <circle cx="49.6" cy="69.6" r="0.9" fill="#fff"/>
+  <circle cx="72.4" cy="69.6" r="0.9" fill="#fff"/>
+
+  <!-- 腮红与微笑（闭口，无牙，区别明显） -->
+  <ellipse cx="42" cy="80" rx="3.4" ry="2" fill="#d98e5a" opacity="0.4"/>
+  <ellipse cx="78" cy="80" rx="3.4" ry="2" fill="#d98e5a" opacity="0.4"/>
+  <path d="M55 82 Q60 86 65 82" stroke="#6B5D4F" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+
+  <!-- 小爪 -->
+  <ellipse cx="30" cy="104" rx="7" ry="9" fill="#8a9a86"/>
+  <ellipse cx="90" cy="104" rx="7" ry="9" fill="#8a9a86"/>
+</svg>

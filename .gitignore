@@ -1,0 +1,39 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!**/.mvn/wrapper/maven-wrapper.jar
+.mvn/
+mvnw
+mvnw.cmd
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+*.local
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Tooling / temp artifacts
+.playwright-mcp/
+*.heapsnapshot
+model-cache/
+*.onnx

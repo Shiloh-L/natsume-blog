@@ -1,0 +1,44 @@
+server:
+  port: 8084
+
+spring:
+  ai:
+    openai:
+      base-url: ${LLM_BASE_URL:http://127.0.0.1:9191}
+      api-key: ${LLM_API_KEY:sk-no-key-required}
+      chat:
+        options:
+          model: ${LLM_MODEL:claude-opus-4.6}
+          temperature: 0.7
+  cloud:
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_HOST:localhost}:8858
+      eager: true
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: blog-ai
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+springdoc:
+  swagger-ui:
+    path: /doc.html
+
+logging:
+  level:
+    com.natsume.blog.ai: info

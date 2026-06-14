@@ -1,0 +1,58 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:13307}/blog_auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:blog}
+    password: ${MYSQL_PASSWORD:blog123}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:redis123}
+      database: 0
+  cloud:
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_HOST:localhost}:8858
+      eager: true
+
+jwt:
+  secret: natsume-book-of-friends-secret-key-please-change-2024
+  expire: 604800
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: blog-auth
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+springdoc:
+  swagger-ui:
+    path: /doc.html
+
+logging:
+  level:
+    com.natsume.blog.auth: info

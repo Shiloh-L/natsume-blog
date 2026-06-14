@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none">
+  <defs>
+    <linearGradient id="s4sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d7ecf2"/>
+      <stop offset="1" stop-color="#eaf4ee"/>
+    </linearGradient>
+    <linearGradient id="s4sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a9d2e0"/>
+      <stop offset="1" stop-color="#7bb0c4"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#s4sky)"/>
+  <circle cx="180" cy="120" r="56" fill="#f3c79a" opacity="0.7"/>
+  <ellipse cx="560" cy="90" rx="70" ry="22" fill="#fff" opacity="0.65"/>
+  <path d="M600 250 C660 220 720 250 800 236 L800 250 Z" fill="#8fae7b" opacity="0.6"/>
+  <rect y="250" width="800" height="200" fill="url(#s4sea)"/>
+  <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.6" fill="none">
+    <path d="M60 300 q20 -10 40 0 t40 0"/>
+    <path d="M300 330 q20 -10 40 0 t40 0"/>
+    <path d="M560 310 q20 -10 40 0 t40 0"/>
+    <path d="M180 370 q20 -10 40 0 t40 0"/>
+    <path d="M460 390 q20 -10 40 0 t40 0"/>
+  </g>
+</svg>
