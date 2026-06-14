@@ -30,6 +30,7 @@
 - 🖼️ 图片：MinIO 对象存储上传（写文章支持拖拽上传封面）
 - ⚡ **多级缓存**：Caffeine(L1) + Redis(L2)；高频浏览量经 **Kafka** 异步聚合落库
 - 🛡️ 治理 & 可观测：Nacos 注册/配置、Gateway 网关鉴权、Sentinel 限流、OpenFeign、RabbitMQ、**OpenTelemetry 链路追踪 → Grafana Tempo**、**Prometheus + Grafana 监控大盘**
+- 🪵 **统一日志**：全服务 Logback 滚动文件日志（全量/错误分离、gz 压缩、按天+大小滚动）；请求日志过滤器记录每请求方法/路径/状态/耗时 + traceId（MDC），慢请求自动 WARN 告警
 
 ---
 

@@ -5,6 +5,7 @@ import com.natsume.blog.ai.dto.RetrievedDoc;
 import com.natsume.blog.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -32,7 +33,14 @@ public class AiService {
     private final SearchClient searchClient;
 
     public AiService(ChatClient.Builder builder, SearchClient searchClient) {
-        this.chatClient = builder.build();
+        // 禁用 Spring AI 的内部工具执行：本机 LLM 网关可能向模型注入外部工具（如 task_complete），
+        // 模型一旦返回 tool_calls，框架会因找不到对应 ToolCallback 而抛 500。
+        // 关闭后框架不再尝试执行工具，直接返回文本内容，保证写作/摘要/问答稳定可用。
+        this.chatClient = builder
+                .defaultOptions(OpenAiChatOptions.builder()
+                        .internalToolExecutionEnabled(false)
+                        .build())
+                .build();
         this.searchClient = searchClient;
     }
 
