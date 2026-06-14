@@ -222,9 +222,9 @@ export default function PostDetailPage() {
 
       <div className="mt-8 flex flex-wrap gap-2">
         {post.tags?.map((t) => (
-          <span key={t.id} className="tag-chip">
+          <Link key={t.id} to={`/tag/${t.id}`} className="tag-chip transition-transform hover:-translate-y-0.5">
             # {t.name}
-          </span>
+          </Link>
         ))}
       </div>
 

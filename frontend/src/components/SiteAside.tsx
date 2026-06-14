@@ -116,7 +116,7 @@ export default function SiteAside({ totalPosts = 0 }: { totalPosts?: number }) {
             {tags.map((t, i) => (
               <Link
                 key={t.id}
-                to={`/search?q=${encodeURIComponent(t.name)}`}
+                to={`/tag/${t.id}`}
                 className="tag-chip transition-transform hover:-translate-y-0.5"
                 style={{ fontSize: `${0.72 + (i % 4) * 0.07}rem` }}
               >

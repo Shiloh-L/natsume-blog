@@ -17,6 +17,7 @@ import MomentsPage from './pages/MomentsPage'
 import FollowFeedPage from './pages/FollowFeedPage'
 import BookmarksPage from './pages/BookmarksPage'
 import ArchivePage from './pages/ArchivePage'
+import TagPage from './pages/TagPage'
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/archive" element={<ArchivePage />} />
           <Route path="/post/:id" element={<PostDetailPage />} />
           <Route path="/category/:id" element={<CategoryPage />} />
+          <Route path="/tag/:id" element={<TagPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/ask" element={<AskPage />} />
           <Route path="/login" element={<LoginPage />} />
