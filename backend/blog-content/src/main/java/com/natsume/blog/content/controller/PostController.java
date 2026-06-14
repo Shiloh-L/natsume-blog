@@ -80,6 +80,12 @@ public class PostController {
         return Result.success(postService.pageMyPosts(user.getUserId(), current, size));
     }
 
+    @Operation(summary = "文章归档（按时间倒序的轻量列表）")
+    @GetMapping("/archive")
+    public Result<java.util.List<com.natsume.blog.content.dto.ArchiveItemVO>> archive() {
+        return Result.success(postService.archive());
+    }
+
     @Operation(summary = "（内部）全部文章索引数据")
     @GetMapping("/internal/index-data")
     public Result<java.util.List<com.natsume.blog.common.dto.PostIndexEvent>> indexData() {

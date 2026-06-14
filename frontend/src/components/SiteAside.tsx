@@ -75,9 +75,10 @@ export default function SiteAside({ totalPosts = 0 }: { totalPosts?: number }) {
               <div className="text-[11px] text-ink-light">标签</div>
             </div>
           </div>
-          <Link to="/about" className="ghibli-btn-ghost mt-4 w-full text-sm">
-            关于这座小屋
-          </Link>
+          <div className="mt-4 grid w-full grid-cols-2 gap-2">
+            <Link to="/archive" className="ghibli-btn-ghost text-sm">🍂 长卷</Link>
+            <Link to="/about" className="ghibli-btn-ghost text-sm">小屋</Link>
+          </div>
         </div>
       </motion.div>
 

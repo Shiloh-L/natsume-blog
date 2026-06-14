@@ -187,6 +187,26 @@ public class PostService {
         return events;
     }
 
+    /** 文章归档：所有已发布文章，按发布时间倒序，轻量字段（供时间线展示，前端按年月分组） */
+    public List<com.natsume.blog.content.dto.ArchiveItemVO> archive() {
+        List<Post> posts = postMapper.selectList(new LambdaQueryWrapper<Post>()
+                .eq(Post::getStatus, 1)
+                .orderByDesc(Post::getCreateTime));
+        if (posts.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        Map<Long, String> categoryNames = categoryMapper.selectList(null).stream()
+                .collect(Collectors.toMap(Category::getId, Category::getName));
+        return posts.stream().map(post -> {
+            com.natsume.blog.content.dto.ArchiveItemVO vo = new com.natsume.blog.content.dto.ArchiveItemVO();
+            vo.setId(post.getId());
+            vo.setTitle(post.getTitle());
+            vo.setCreateTime(post.getCreateTime());
+            vo.setCategoryName(post.getCategoryId() == null ? null : categoryNames.get(post.getCategoryId()));
+            return vo;
+        }).collect(Collectors.toList());
+    }
+
     private void saveTags(Long postId, List<Long> tagIds) {
         if (tagIds == null || tagIds.isEmpty()) {
             return;

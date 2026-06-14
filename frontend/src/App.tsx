@@ -16,6 +16,7 @@ import UserCenterPage from './pages/UserCenterPage'
 import MomentsPage from './pages/MomentsPage'
 import FollowFeedPage from './pages/FollowFeedPage'
 import BookmarksPage from './pages/BookmarksPage'
+import ArchivePage from './pages/ArchivePage'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/moments" element={<MomentsPage />} />
           <Route path="/follow-feed" element={<FollowFeedPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
+          <Route path="/archive" element={<ArchivePage />} />
           <Route path="/post/:id" element={<PostDetailPage />} />
           <Route path="/category/:id" element={<CategoryPage />} />
           <Route path="/search" element={<SearchPage />} />

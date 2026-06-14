@@ -19,7 +19,7 @@ export default function Footer() {
           夏目友人帐 · 温柔小屋 — 用 React + Spring Cloud 编织的微服务博客
         </p>
         <p className="mt-1 text-xs text-ink-light/70">
-          © {new Date().getFullYear()} Natsume Blog · 仅供学习交流 · 图片来自免版权来源
+          © {new Date().getFullYear()} Natsume Blog · 仅供学习交流 · 插画与封面均为原创
         </p>
       </div>
     </footer>

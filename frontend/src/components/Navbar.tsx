@@ -9,6 +9,7 @@ const NAV = [
   { to: '/', label: '首页' },
   { to: '/follow-feed', label: '牵绊' },
   { to: '/moments', label: '光阴' },
+  { to: '/archive', label: '长卷' },
   { to: '/ask', label: '问猫咪老师' },
   { to: '/about', label: '关于' },
 ]

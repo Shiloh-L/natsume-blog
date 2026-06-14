@@ -55,3 +55,13 @@ export const fetchCategories = () =>
 
 export const fetchTags = () =>
   unwrap<Tag[]>(http.get<Result<Tag[]>>('/api/tags'))
+
+export interface ArchiveItem {
+  id: number
+  title: string
+  categoryName?: string
+  createTime: string
+}
+
+export const fetchArchive = () =>
+  unwrap<ArchiveItem[]>(http.get<Result<ArchiveItem[]>>('/api/posts/archive'))
