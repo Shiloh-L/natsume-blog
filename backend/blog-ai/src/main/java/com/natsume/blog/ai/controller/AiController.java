@@ -68,9 +68,9 @@ public class AiController {
     }
 
     @Operation(summary = "AI 续写 (SSE)")
-    @GetMapping(value = "/continue/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> continueStream(@RequestParam String text) {
-        return aiService.continueWriting(text);
+    @PostMapping(value = "/continue/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> continueStream(@RequestBody Map<String, String> body) {
+        return aiService.continueWriting(body.getOrDefault("text", ""));
     }
 
     @Operation(summary = "AI 润色")

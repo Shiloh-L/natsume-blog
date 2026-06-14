@@ -108,9 +108,10 @@ export default function WritePage() {
     abortRef.current = new AbortController()
     try {
       await streamSSE(
-        continueStreamUrl(content.slice(-1500)),
+        continueStreamUrl(),
         (chunk) => setContent((prev) => prev + chunk),
         abortRef.current.signal,
+        { text: content.slice(-1500) },
       )
     } catch {
       toast.error('续写失败')

@@ -24,6 +24,7 @@ x-common-env: &common-env
   MINIO_PUBLIC_URL: http://localhost:9000
   SENTINEL_HOST: sentinel
   OTLP_ENDPOINT: http://tempo:4318/v1/traces
+  LOG_PATH: /app/logs
 
 x-extra-hosts: &extra-hosts
   - "host.docker.internal:host-gateway"
@@ -42,6 +43,8 @@ services:
     extra_hosts: *extra-hosts
     ports:
       - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
     networks: [blog-net]
 
   blog-auth:
@@ -57,6 +60,8 @@ services:
     extra_hosts: *extra-hosts
     ports:
       - "8081:8081"
+    volumes:
+      - ./logs:/app/logs
     networks: [blog-net]
 
   blog-content:
@@ -72,6 +77,8 @@ services:
     extra_hosts: *extra-hosts
     ports:
       - "8082:8082"
+    volumes:
+      - ./logs:/app/logs
     networks: [blog-net]
 
   blog-search:
@@ -89,6 +96,7 @@ services:
       - "8083:8083"
     volumes:
       - search-model-cache:/app/model-cache
+      - ./logs:/app/logs
     networks: [blog-net]
 
   blog-ai:
@@ -107,6 +115,8 @@ services:
     extra_hosts: *extra-hosts
     ports:
       - "8084:8084"
+    volumes:
+      - ./logs:/app/logs
     networks: [blog-net]
 
   blog-frontend:

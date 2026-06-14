@@ -31,13 +31,22 @@ export const askBlog = (question: string) =>
 /**
  * 流式接口：通过 fetch + ReadableStream 读取 SSE。
  * onChunk 每收到一段文本回调一次。
+ * 支持 GET（默认）或 POST + JSON body（用于正文较长、避免 URL 过长导致 414 的场景）。
  */
 export async function streamSSE(
   url: string,
   onChunk: (text: string) => void,
   signal?: AbortSignal,
+  body?: unknown,
 ): Promise<void> {
-  const resp = await fetch(url, { signal, headers: { Accept: 'text/event-stream' } })
+  const resp = await fetch(url, {
+    method: body !== undefined ? 'POST' : 'GET',
+    signal,
+    headers: body !== undefined
+      ? { Accept: 'text/event-stream', 'Content-Type': 'application/json' }
+      : { Accept: 'text/event-stream' },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
   if (!resp.ok || !resp.body) throw new Error('流式请求失败')
   const reader = resp.body.getReader()
   const decoder = new TextDecoder('utf-8')
@@ -71,5 +80,4 @@ export const writeArticleStreamUrl = (topic: string, style?: string, category?: 
   return `/api/ai/write/stream?${params.toString()}`
 }
 
-export const continueStreamUrl = (text: string) =>
-  `/api/ai/continue/stream?text=${encodeURIComponent(text)}`
+export const continueStreamUrl = () => '/api/ai/continue/stream'
