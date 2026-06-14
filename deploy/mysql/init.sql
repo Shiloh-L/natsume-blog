@@ -6,18 +6,16 @@ SET NAMES utf8mb4;
 SET time_zone = '+08:00';
 
 -- ------------------------------------------------------------
---  授权: blog 用户可访问 blog 与 blog_auth 库
+--  数据库：单体应用统一使用 blog 库
 -- ------------------------------------------------------------
 CREATE DATABASE IF NOT EXISTS `blog`       DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE IF NOT EXISTS `blog_auth`  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 GRANT ALL PRIVILEGES ON `blog`.*      TO 'blog'@'%';
-GRANT ALL PRIVILEGES ON `blog_auth`.* TO 'blog'@'%';
 FLUSH PRIVILEGES;
 
 -- ============================================================
---  认证库  blog_auth
+--  认证相关表（sys_user / sys_role / sys_user_role）
 -- ============================================================
-USE `blog_auth`;
+USE `blog`;
 
 CREATE TABLE IF NOT EXISTS `sys_user` (
   `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',

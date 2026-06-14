@@ -2,121 +2,41 @@
 # 使用: docker compose -f docker-compose.app.yml up -d --build
 name: blog-app
 
-x-common-env: &common-env
-  TZ: Asia/Shanghai
-  JAVA_OPTS: "-Xms128m -Xmx384m -XX:+UseG1GC -XX:MaxMetaspaceSize=192m"
-  NACOS_HOST: nacos
-  MYSQL_HOST: mysql
-  MYSQL_PORT: "3306"
-  MYSQL_USER: blog
-  MYSQL_PASSWORD: blog123
-  REDIS_HOST: redis
-  REDIS_PORT: "6379"
-  REDIS_PASSWORD: redis123
-  RABBITMQ_HOST: rabbitmq
-  RABBITMQ_PORT: "5672"
-  RABBITMQ_USER: blog
-  RABBITMQ_PASSWORD: blog123
-  QDRANT_HOST: qdrant
-  QDRANT_PORT: "6334"
-  KAFKA_BOOTSTRAP: kafka:9092
-  MINIO_ENDPOINT: http://minio:9000
-  MINIO_PUBLIC_URL: http://localhost:9000
-  SENTINEL_HOST: sentinel
-  OTLP_ENDPOINT: http://tempo:4318/v1/traces
-  LOG_PATH: /app/logs
-
-x-extra-hosts: &extra-hosts
-  - "host.docker.internal:host-gateway"
-
 services:
-  blog-gateway:
+  blog-app:
     build:
       context: ./backend
       dockerfile: Dockerfile
       args:
-        MODULE: blog-gateway
-    image: natsume/blog-gateway:1.0.0
-    container_name: blog-gateway
-    restart: unless-stopped
-    environment: *common-env
-    extra_hosts: *extra-hosts
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./logs:/app/logs
-    networks: [blog-net]
-
-  blog-auth:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      args:
-        MODULE: blog-auth
-    image: natsume/blog-auth:1.0.0
-    container_name: blog-auth
-    restart: unless-stopped
-    environment: *common-env
-    extra_hosts: *extra-hosts
-    ports:
-      - "8081:8081"
-    volumes:
-      - ./logs:/app/logs
-    networks: [blog-net]
-
-  blog-content:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      args:
-        MODULE: blog-content
-    image: natsume/blog-content:1.0.0
-    container_name: blog-content
-    restart: unless-stopped
-    environment: *common-env
-    extra_hosts: *extra-hosts
-    ports:
-      - "8082:8082"
-    volumes:
-      - ./logs:/app/logs
-    networks: [blog-net]
-
-  blog-search:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      args:
-        MODULE: blog-search
-    image: natsume/blog-search:1.0.0
-    container_name: blog-search
-    restart: unless-stopped
-    environment: *common-env
-    extra_hosts: *extra-hosts
-    ports:
-      - "8083:8083"
-    volumes:
-      - search-model-cache:/app/model-cache
-      - ./logs:/app/logs
-    networks: [blog-net]
-
-  blog-ai:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      args:
-        MODULE: blog-ai
-    image: natsume/blog-ai:1.0.0
-    container_name: blog-ai
+        MODULE: blog-app
+    image: natsume/blog-app:2.0.0
+    container_name: blog-app
     restart: unless-stopped
     environment:
-      <<: *common-env
+      TZ: Asia/Shanghai
+      JAVA_OPTS: "-Xms256m -Xmx768m -XX:+UseG1GC -XX:MaxMetaspaceSize=256m"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: blog
+      MYSQL_PASSWORD: blog123
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: redis123
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6334"
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_URL: http://localhost:9000
+      MODEL_CACHE_DIR: /app/model-cache
       LLM_BASE_URL: https://api.deepseek.com
       LLM_API_KEY: ${LLM_API_KEY:?请在 .env 中配置 LLM_API_KEY}
       LLM_MODEL: deepseek-chat
-    extra_hosts: *extra-hosts
+      LOG_PATH: /app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
-      - "8084:8084"
+      - "8080:8080"
     volumes:
+      - search-model-cache:/app/model-cache
       - ./logs:/app/logs
     networks: [blog-net]
 
@@ -124,13 +44,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: natsume/blog-frontend:1.0.0
+    image: natsume/blog-frontend:2.0.0
     container_name: blog-frontend
     restart: unless-stopped
     ports:
       - "8888:80"
     depends_on:
-      - blog-gateway
+      - blog-app
     networks: [blog-net]
 
 networks:

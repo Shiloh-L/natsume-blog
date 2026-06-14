@@ -9,15 +9,11 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
     <name>blog-backend</name>
-    <description>夏目博客 — Spring Cloud Alibaba 微服务后端</description>
+    <description>夏目博客 — 模块化单体后端（Spring Boot）</description>
 
     <modules>
         <module>blog-common</module>
-        <module>blog-gateway</module>
-        <module>blog-auth</module>
-        <module>blog-content</module>
-        <module>blog-search</module>
-        <module>blog-ai</module>
+        <module>blog-app</module>
     </modules>
 
     <parent>
