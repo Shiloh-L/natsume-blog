@@ -193,14 +193,14 @@ export default function WritePage() {
   const onBodyImage = async (file?: File) => {
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      toast.error('请选择图片文件')
+      toast.error('请选择一张图片呢～')
       return
     }
     setBusy(true)
     try {
       const url = await uploadImage(file)
       insertAtCursor(`\n![](${url})\n`)
-      toast.success('图片已插入正文')
+      toast.success('图片已落入正文 🍃')
     } catch (err: any) {
       toast.error(err?.response?.data?.message || '图片上传失败')
     } finally {
@@ -369,11 +369,11 @@ export default function WritePage() {
   const onCoverUpload = async (file?: File) => {
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      toast.error('请选择图片文件')
+      toast.error('请选择一张图片呢～')
       return
     }
     if (file.size > 50 * 1024 * 1024) {
-      toast.error(`图片太大（${(file.size / 1024 / 1024).toFixed(1)}MB），请控制在 50MB 以内`)
+      toast.error(`图片有点大（${(file.size / 1024 / 1024).toFixed(1)}MB），换张小于 50MB 的吧～`)
       return
     }
     setBusy(true)

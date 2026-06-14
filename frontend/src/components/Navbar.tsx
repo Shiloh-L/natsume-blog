@@ -119,7 +119,7 @@ export default function Navbar() {
                     </Link>
                     {isAdmin() && (
                       <Link to="/admin/ai" className="block rounded-xl px-3 py-1.5 text-ink-soft hover:bg-paper-deep">
-                        AI 设置
+                        调教猫咪老师
                       </Link>
                     )}
                     <button
@@ -236,7 +236,7 @@ export default function Navbar() {
                       </Link>
                       {isAdmin() && (
                         <Link to="/admin/ai" className="block rounded-xl px-4 py-2.5 text-ink-soft hover:bg-matcha-light/30 hover:text-matcha-deep">
-                          🐱 AI 设置
+                          🐱 调教猫咪老师
                         </Link>
                       )}
                     </>

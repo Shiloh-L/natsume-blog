@@ -72,7 +72,7 @@ export default function AiSettingsPage() {
 
   const onSave = async () => {
     if (!baseUrl.trim() || !model.trim()) {
-      toast.error('base-url 与模型名不能为空')
+      toast.error('服务地址与模型名称不能为空呢')
       return
     }
     setSaving(true)

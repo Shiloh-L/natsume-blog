@@ -86,10 +86,10 @@ public class AiConfigService {
     /** 管理员更新配置：持久化 + 重建 ChatClient */
     public synchronized AiConfigVO update(AiConfigDTO dto) {
         if (dto.getBaseUrl() == null || dto.getBaseUrl().isBlank()) {
-            throw new BusinessException("base-url 不能为空");
+            throw new BusinessException("服务地址不能为空呢");
         }
         if (dto.getModel() == null || dto.getModel().isBlank()) {
-            throw new BusinessException("模型名不能为空");
+            throw new BusinessException("模型名称不能为空呢");
         }
         AiConfig cfg = mapper.selectById(CONFIG_ID);
         boolean insert = (cfg == null);

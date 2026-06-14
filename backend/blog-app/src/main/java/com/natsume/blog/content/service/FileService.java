@@ -44,7 +44,7 @@ public class FileService {
 
     public String upload(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException("文件不能为空");
+            throw new BusinessException("请选择一张图片呢～");
         }
         String original = file.getOriginalFilename();
         String ext = original != null && original.contains(".")
@@ -59,7 +59,7 @@ public class FileService {
                     .build());
         } catch (Exception e) {
             log.error("上传文件失败", e);
-            throw new BusinessException("上传失败：" + e.getMessage());
+            throw new BusinessException("图片没能收下呢，请稍后再试～");
         }
         return minioConfig.getPublicUrl() + "/" + minioConfig.getBucket() + "/" + objectName;
     }

@@ -72,7 +72,7 @@ export default function UserCenterPage() {
 
   const onAvatarUpload = async (file?: File) => {
     if (!file) return
-    if (!file.type.startsWith('image/')) return toast.error('请选择图片')
+    if (!file.type.startsWith('image/')) return toast.error('请选择一张图片呢～')
     if (file.size > 50 * 1024 * 1024) return toast.error('图片不能超过 50MB')
     setSaving(true)
     try {
@@ -126,7 +126,7 @@ export default function UserCenterPage() {
           <div className="mt-0.5 text-xs text-ink-light">@{profile?.username || user.username}</div>
           <p className="mt-1 text-sm text-ink-soft">{profile?.bio || '这个人很神秘，什么都没留下。'}</p>
           <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-ink-light sm:justify-start">
-            <span className="tag-chip">{profile?.role === 'ROLE_ADMIN' ? '管理员' : '普通用户'}</span>
+            <span className="tag-chip">{profile?.role === 'ROLE_ADMIN' ? '小屋主人' : '小屋友人'}</span>
             <span>📝 {posts.length} 篇文章</span>
             {stats && (
               <>

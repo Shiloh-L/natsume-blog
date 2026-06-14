@@ -68,7 +68,7 @@ export default function NyankoChat() {
               <img src="/cat.svg" alt="" className="h-8 w-8 rounded-full bg-white/30 p-0.5" />
               <div>
                 <div className="font-bold">猫咪老师</div>
-                <div className="text-[10px] opacity-80">AI · 由 Spring AI 驱动</div>
+                <div className="text-[10px] opacity-80">慵懒的妖怪助手</div>
               </div>
             </div>
 
