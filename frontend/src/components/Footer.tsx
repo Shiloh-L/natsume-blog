@@ -21,6 +21,11 @@ export default function Footer() {
         <p className="mt-1 text-xs text-ink-light/70">
           © {new Date().getFullYear()} Natsume Blog · 仅供学习交流 · 插画与封面均为原创
         </p>
+        <p className="mt-2 text-xs text-ink-light/70">
+          <a href="/rss.xml" className="transition-colors hover:text-matcha-deep" target="_blank" rel="noopener noreferrer">
+            🍃 RSS 订阅
+          </a>
+        </p>
       </div>
     </footer>
   )

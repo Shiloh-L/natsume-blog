@@ -26,6 +26,7 @@ services:
       QDRANT_PORT: "6334"
       MINIO_ENDPOINT: http://minio:9000
       MINIO_PUBLIC_URL: http://localhost:9000
+      SITE_BASE_URL: http://localhost:8888
       MODEL_CACHE_DIR: /app/model-cache
       LLM_BASE_URL: https://api.deepseek.com
       LLM_API_KEY: ${LLM_API_KEY:?请在 .env 中配置 LLM_API_KEY}
