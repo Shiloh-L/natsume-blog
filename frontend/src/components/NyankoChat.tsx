@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { chatWithNyanko } from '../api/ai'
 
@@ -7,7 +8,11 @@ interface Msg {
   text: string
 }
 
+// 在这些页面隐藏聊天悬浮球（避免遮挡底部操作栏，且这些页已自带 AI 入口）
+const HIDDEN_ROUTES = ['/write', '/admin/ai']
+
 export default function NyankoChat() {
+  const location = useLocation()
   const [open, setOpen] = useState(false)
   const [msgs, setMsgs] = useState<Msg[]>([
     { role: 'cat', text: '哼，本大爷是猫咪老师。有什么想问的，尽管说吧～ (｡•ω•｡)' },
@@ -15,6 +20,10 @@ export default function NyankoChat() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
+
+  if (HIDDEN_ROUTES.some((r) => location.pathname.startsWith(r))) {
+    return null
+  }
 
   const send = async () => {
     const text = input.trim()

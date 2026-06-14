@@ -21,6 +21,9 @@ import {
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../store/toastStore'
 import MarkdownView from '../components/MarkdownView'
+import { readingStats } from '../utils/toc'
+
+type Mode = 'edit' | 'split' | 'preview'
 
 export default function WritePage() {
   const { user } = useAuthStore()
@@ -33,20 +36,27 @@ export default function WritePage() {
 
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
-  const [content, setContent] = useState('# 我的故事\n\n在这里写下一段温柔的回忆…')
+  const [content, setContent] = useState('')
   const [cover, setCover] = useState('')
   const [categoryId, setCategoryId] = useState<number | undefined>()
   const [tagIds, setTagIds] = useState<number[]>([])
-  const [preview, setPreview] = useState(false)
+  const [origStatus, setOrigStatus] = useState(1)
+  const [mode, setMode] = useState<Mode>('split')
   const [busy, setBusy] = useState(false)
 
-  // AI 面板
+  // AI
   const [topic, setTopic] = useState('')
   const [style, setStyle] = useState('治愈温柔')
   const [generating, setGenerating] = useState(false)
   const [titleIdeas, setTitleIdeas] = useState<string[]>([])
+  const [aiOpen, setAiOpen] = useState(true)
+
   const abortRef = useRef<AbortController | null>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const bodyImgInputRef = useRef<HTMLInputElement>(null)
+  const contentRef = useRef<HTMLTextAreaElement>(null)
+
+  const stats = readingStats(content)
 
   useEffect(() => {
     if (editId) {
@@ -58,6 +68,7 @@ export default function WritePage() {
           setCover(p.cover || '')
           setCategoryId(p.categoryId)
           setTagIds((p.tags || []).map((t) => t.id))
+          setOrigStatus(p.status ?? 1)
         })
         .catch(() => toast.error('加载文章失败'))
     }
@@ -75,7 +86,87 @@ export default function WritePage() {
   const toggleTag = (id: number) =>
     setTagIds((arr) => (arr.includes(id) ? arr.filter((t) => t !== id) : [...arr, id]))
 
-  /* ---------------- AI 操作 ---------------- */
+  /* ---------------- Markdown 工具栏 ---------------- */
+
+  const restoreSelection = (start: number, end: number) => {
+    requestAnimationFrame(() => {
+      const ta = contentRef.current
+      if (!ta) return
+      ta.focus()
+      ta.selectionStart = start
+      ta.selectionEnd = end
+    })
+  }
+
+  const wrap = (before: string, after = before, placeholder = '文字') => {
+    const ta = contentRef.current
+    if (!ta) return
+    const s = ta.selectionStart
+    const e = ta.selectionEnd
+    const sel = content.slice(s, e) || placeholder
+    const next = content.slice(0, s) + before + sel + after + content.slice(e)
+    setContent(next)
+    restoreSelection(s + before.length, s + before.length + sel.length)
+  }
+
+  const linePrefix = (prefix: string) => {
+    const ta = contentRef.current
+    if (!ta) return
+    const s = ta.selectionStart
+    const lineStart = content.lastIndexOf('\n', s - 1) + 1
+    const next = content.slice(0, lineStart) + prefix + content.slice(lineStart)
+    setContent(next)
+    restoreSelection(s + prefix.length, ta.selectionEnd + prefix.length)
+  }
+
+  const insertAtCursor = (text: string) => {
+    const ta = contentRef.current
+    if (!ta) {
+      setContent(content + text)
+      return
+    }
+    const s = ta.selectionStart
+    const e = ta.selectionEnd
+    setContent(content.slice(0, s) + text + content.slice(e))
+    restoreSelection(s + text.length, s + text.length)
+  }
+
+  const onBodyImage = async (file?: File) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('请选择图片文件')
+      return
+    }
+    setBusy(true)
+    try {
+      const url = await uploadImage(file)
+      insertAtCursor(`\n![](${url})\n`)
+      toast.success('图片已插入正文')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || '图片上传失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const TOOLS: { label: string; title: string; run: () => void }[] = [
+    { label: 'H1', title: '一级标题', run: () => linePrefix('# ') },
+    { label: 'H2', title: '二级标题', run: () => linePrefix('## ') },
+    { label: 'H3', title: '三级标题', run: () => linePrefix('### ') },
+    { label: '𝐁', title: '加粗', run: () => wrap('**') },
+    { label: '𝑰', title: '斜体', run: () => wrap('*') },
+    { label: 'S̶', title: '删除线', run: () => wrap('~~') },
+    { label: '❝', title: '引用', run: () => linePrefix('> ') },
+    { label: '•', title: '无序列表', run: () => linePrefix('- ') },
+    { label: '1.', title: '有序列表', run: () => linePrefix('1. ') },
+    { label: '🔗', title: '链接', run: () => wrap('[', '](https://)', '链接文字') },
+    { label: '‹›', title: '行内代码', run: () => wrap('`') },
+    { label: '{ }', title: '代码块', run: () => insertAtCursor('\n```\n\n```\n') },
+    { label: '—', title: '分割线', run: () => insertAtCursor('\n\n---\n\n') },
+    { label: '🖼', title: '插入图片', run: () => bodyImgInputRef.current?.click() },
+  ]
+
+  /* ---------------- AI ---------------- */
 
   const aiGenerate = async () => {
     const t = (topic || title).trim()
@@ -85,7 +176,7 @@ export default function WritePage() {
     }
     setGenerating(true)
     setContent('')
-    setPreview(true)
+    setMode('split')
     abortRef.current = new AbortController()
     try {
       await streamSSE(
@@ -95,7 +186,7 @@ export default function WritePage() {
       )
       toast.success('生成完成，可继续编辑')
     } catch {
-      toast.error('AI 生成失败，请确认大模型网关可用')
+      toast.error('AI 生成失败，请确认大模型可用')
     } finally {
       setGenerating(false)
     }
@@ -104,7 +195,7 @@ export default function WritePage() {
   const aiContinue = async () => {
     if (!content.trim()) return
     setGenerating(true)
-    setPreview(true)
+    setMode('split')
     abortRef.current = new AbortController()
     try {
       await streamSSE(
@@ -143,6 +234,7 @@ export default function WritePage() {
     setBusy(true)
     try {
       setSummary(await summarize(content))
+      toast.success('摘要已生成')
     } catch {
       toast.error('生成摘要失败')
     } finally {
@@ -180,54 +272,51 @@ export default function WritePage() {
     }
   }
 
+  /* ---------------- 封面 ---------------- */
+
   const onCoverUpload = async (file?: File) => {
     if (!file) return
     if (!file.type.startsWith('image/')) {
       toast.error('请选择图片文件')
       return
     }
-    const maxMB = 50
-    if (file.size > maxMB * 1024 * 1024) {
-      toast.error(`图片太大（${(file.size / 1024 / 1024).toFixed(1)}MB），请控制在 ${maxMB}MB 以内`)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error(`图片太大（${(file.size / 1024 / 1024).toFixed(1)}MB），请控制在 50MB 以内`)
       return
     }
     setBusy(true)
     try {
-      const url = await uploadImage(file)
-      setCover(url)
+      setCover(await uploadImage(file))
       toast.success('封面已上传')
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || '上传失败，请重试'
-      toast.error(`封面上传失败：${msg}`)
+      toast.error(`封面上传失败：${err?.response?.data?.message || err?.message || '请重试'}`)
     } finally {
       setBusy(false)
     }
   }
 
-  const onSubmit = async () => {
-    if (!title.trim() || !content.trim()) {
-      toast.error('标题和正文不能为空')
+  /* ---------------- 提交 ---------------- */
+
+  const submit = async (status: number) => {
+    if (!title.trim()) {
+      toast.error('给文章起个标题吧')
+      return
+    }
+    if (!content.trim()) {
+      toast.error('正文不能为空')
       return
     }
     setBusy(true)
     try {
-      const form = {
-        title,
-        summary,
-        content,
-        cover: cover || '',
-        categoryId,
-        tagIds,
-        status: 1,
-      }
+      const form = { title, summary, content, cover: cover || '', categoryId, tagIds, status }
       if (editId) {
         await updatePost(editId, form)
-        toast.success('已更新')
+        toast.success(status === 0 ? '已存为草稿' : '已更新')
         navigate(`/post/${editId}`)
       } else {
         const id = await createPost(form)
-        toast.success('发布成功')
-        navigate(`/post/${id}`)
+        toast.success(status === 0 ? '草稿已保存' : '发布成功')
+        navigate(status === 0 ? '/me' : `/post/${id}`)
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || '保存失败')
@@ -236,164 +325,272 @@ export default function WritePage() {
     }
   }
 
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="brush-title mb-6 text-4xl text-ink">{editId ? '✍️ 编辑文章' : '✍️ 写下你的故事'}</h1>
+  const editorVisible = mode !== 'preview'
+  const previewVisible = mode !== 'edit'
 
-      {/* AI 创作面板 */}
-      <div className="mb-8 rounded-[1.5rem] border border-matcha/20 bg-matcha-light/15 p-5">
-        <div className="mb-3 flex items-center gap-2">
-          <img src="/cat.svg" className="h-7 w-7" alt="" />
-          <span className="font-bold text-matcha-deep">猫咪老师 · AI 创作助手</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8 pb-28">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        {/* 主编辑区 */}
+        <div className="min-w-0">
           <input
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder="给个主题，如「夏夜的萤火虫」"
-            className="min-w-[12rem] flex-1 rounded-full bg-white/80 px-4 py-2 text-sm outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="写下一个动人的标题…"
+            className="w-full bg-transparent text-3xl font-bold text-ink outline-none placeholder:text-ink-light/50"
           />
-          <select
-            value={style}
-            onChange={(e) => setStyle(e.target.value)}
-            className="rounded-full bg-white/80 px-3 py-2 text-sm outline-none ring-1 ring-ink/10"
-          >
-            <option>治愈温柔</option>
-            <option>诗意散文</option>
-            <option>技术干货</option>
-            <option>幽默轻松</option>
-          </select>
-          {generating ? (
-            <button onClick={stopGenerate} className="ghibli-btn-ghost text-sm">⏹ 停止</button>
-          ) : (
-            <button onClick={aiGenerate} className="ghibli-btn-primary text-sm">✨ AI 帮我写</button>
-          )}
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          <button onClick={aiContinue} disabled={generating} className="ghibli-btn-ghost text-xs disabled:opacity-50">➕ 续写</button>
-          <button onClick={aiPolish} disabled={busy || generating} className="ghibli-btn-ghost text-xs disabled:opacity-50">💧 润色</button>
-          <button onClick={aiSummary} disabled={busy} className="ghibli-btn-ghost text-xs disabled:opacity-50">📝 摘要</button>
-          <button onClick={aiTitles} disabled={busy} className="ghibli-btn-ghost text-xs disabled:opacity-50">🏷️ 起标题</button>
-          <button onClick={aiTags} disabled={busy} className="ghibli-btn-ghost text-xs disabled:opacity-50"># 推荐标签</button>
-        </div>
-        {titleIdeas.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {titleIdeas.map((t) => (
-              <button
-                key={t}
-                onClick={() => {
-                  setTitle(t)
-                  setTitleIdeas([])
-                }}
-                className="rounded-full bg-white/70 px-3 py-1 text-xs text-ink-soft ring-1 ring-ink/10 hover:bg-white"
-              >
-                {t}
-              </button>
-            ))}
+          <div className="mt-2 mb-4 h-px bg-gradient-to-r from-matcha/40 to-transparent" />
+
+          {/* 工具栏 + 模式切换 */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-0.5 rounded-xl bg-white/60 p-1 ring-1 ring-ink/5">
+              {TOOLS.map((t) => (
+                <button
+                  key={t.title}
+                  title={t.title}
+                  onClick={t.run}
+                  disabled={!editorVisible}
+                  className="flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm text-ink-soft transition-colors hover:bg-matcha-light/40 hover:text-matcha-deep disabled:opacity-40"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-0.5 rounded-full bg-white/60 p-1 text-xs ring-1 ring-ink/5">
+              {(['edit', 'split', 'preview'] as Mode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`rounded-full px-3 py-1 transition-colors ${
+                    mode === m ? 'bg-matcha text-white' : 'text-ink-soft hover:text-matcha-deep'
+                  }`}
+                >
+                  {m === 'edit' ? '编辑' : m === 'split' ? '分屏' : '预览'}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+
+          {/* 编辑器 / 预览 */}
+          <div
+            className={`mt-3 ${
+              mode === 'split' ? 'grid gap-3 lg:grid-cols-2' : ''
+            }`}
+          >
+            {editorVisible && (
+              <textarea
+                ref={contentRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="在这里写下你的故事，支持 Markdown…"
+                className="min-h-[28rem] w-full resize-y rounded-2xl bg-white/80 p-4 font-mono text-sm leading-relaxed text-ink outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+                    e.preventDefault()
+                    wrap('**')
+                  }
+                }}
+              />
+            )}
+            {previewVisible && (
+              <div className="min-h-[28rem] overflow-auto rounded-2xl bg-paper-warm/60 p-5 ring-1 ring-ink/5">
+                {content.trim() ? (
+                  <MarkdownView content={content} />
+                ) : (
+                  <p className="text-sm text-ink-light">预览会显示在这里 🍃</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-2 flex items-center gap-4 text-xs text-ink-light">
+            <span>✍ {stats.words} 字</span>
+            <span>☕ 约 {stats.minutes} 分钟</span>
+            {generating && <span className="animate-pulse text-matcha-deep">AI 书写中…</span>}
+          </div>
+
+          <input
+            ref={bodyImgInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              onBodyImage(e.target.files?.[0])
+              e.target.value = ''
+            }}
+          />
+        </div>
+
+        {/* 侧栏 */}
+        <aside className="space-y-5">
+          {/* AI 创作助手 */}
+          <div className="paper-card overflow-hidden">
+            <button
+              onClick={() => setAiOpen((o) => !o)}
+              className="flex w-full items-center gap-2 px-4 py-3"
+            >
+              <img src="/cat.svg" className="h-6 w-6" alt="" />
+              <span className="font-bold text-matcha-deep">猫咪老师 · 创作助手</span>
+              <span className="ml-auto text-ink-light">{aiOpen ? '▾' : '▸'}</span>
+            </button>
+            {aiOpen && (
+              <div className="space-y-3 px-4 pb-4">
+                <input
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="主题，如「夏夜的萤火虫」"
+                  className="w-full rounded-xl bg-white/80 px-3 py-2 text-sm outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
+                />
+                <div className="flex gap-2">
+                  <select
+                    value={style}
+                    onChange={(e) => setStyle(e.target.value)}
+                    className="flex-1 rounded-xl bg-white/80 px-3 py-2 text-sm outline-none ring-1 ring-ink/10"
+                  >
+                    <option>治愈温柔</option>
+                    <option>诗意散文</option>
+                    <option>技术干货</option>
+                    <option>幽默轻松</option>
+                  </select>
+                  {generating ? (
+                    <button onClick={stopGenerate} className="ghibli-btn-ghost whitespace-nowrap text-sm">
+                      ⏹ 停止
+                    </button>
+                  ) : (
+                    <button onClick={aiGenerate} className="ghibli-btn-primary whitespace-nowrap text-sm">
+                      ✨ 帮我写
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <button onClick={aiContinue} disabled={generating} className="rounded-lg bg-white/70 px-2 py-1.5 text-ink-soft ring-1 ring-ink/10 hover:bg-white disabled:opacity-50">➕ 续写</button>
+                  <button onClick={aiPolish} disabled={busy || generating} className="rounded-lg bg-white/70 px-2 py-1.5 text-ink-soft ring-1 ring-ink/10 hover:bg-white disabled:opacity-50">💧 润色</button>
+                  <button onClick={aiSummary} disabled={busy} className="rounded-lg bg-white/70 px-2 py-1.5 text-ink-soft ring-1 ring-ink/10 hover:bg-white disabled:opacity-50">📝 摘要</button>
+                  <button onClick={aiTitles} disabled={busy} className="rounded-lg bg-white/70 px-2 py-1.5 text-ink-soft ring-1 ring-ink/10 hover:bg-white disabled:opacity-50">🏷️ 起标题</button>
+                  <button onClick={aiTags} disabled={busy} className="col-span-2 rounded-lg bg-white/70 px-2 py-1.5 text-ink-soft ring-1 ring-ink/10 hover:bg-white disabled:opacity-50"># 推荐标签</button>
+                </div>
+                {titleIdeas.length > 0 && (
+                  <div className="space-y-1">
+                    {titleIdeas.map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => {
+                          setTitle(t)
+                          setTitleIdeas([])
+                        }}
+                        className="block w-full truncate rounded-lg bg-matcha-light/20 px-3 py-1.5 text-left text-xs text-ink-soft hover:bg-matcha-light/40"
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 文章设置 */}
+          <div className="paper-card space-y-4 p-4">
+            <h3 className="font-serif font-bold text-ink">文章设置</h3>
+
+            <div>
+              <label className="mb-1 block text-xs text-ink-light">分类</label>
+              <select
+                value={categoryId ?? ''}
+                onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
+                className="w-full rounded-xl bg-white/80 px-3 py-2 text-sm outline-none ring-1 ring-ink/10"
+              >
+                <option value="">选择分类</option>
+                {categories?.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-ink-light">封面</label>
+              <div
+                onDrop={(e) => {
+                  e.preventDefault()
+                  onCoverUpload(e.dataTransfer.files?.[0])
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onClick={() => coverInputRef.current?.click()}
+                className="group relative flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-matcha/40 bg-white/60 text-sm text-ink-light hover:bg-white"
+              >
+                {cover ? (
+                  <>
+                    <img src={cover} alt="封面预览" className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-ink/40 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      点击更换
+                    </div>
+                  </>
+                ) : (
+                  <span className="px-3 text-center">🖼️ 点击或拖拽上传封面<br />（留空则用主题水彩图）</span>
+                )}
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    onCoverUpload(e.target.files?.[0])
+                    e.target.value = ''
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-ink-light">标签</label>
+              <div className="flex flex-wrap gap-1.5">
+                {tags?.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => toggleTag(t.id)}
+                    className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
+                      tagIds.includes(t.id)
+                        ? 'bg-matcha text-white'
+                        : 'bg-white/70 text-ink-soft ring-1 ring-ink/10 hover:bg-white'
+                    }`}
+                  >
+                    # {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-ink-light">摘要</label>
+              <textarea
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                rows={3}
+                placeholder="可手写，或点上方「摘要」让 AI 代劳"
+                className="w-full rounded-xl bg-white/80 p-2.5 text-sm outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
+              />
+            </div>
+          </div>
+        </aside>
       </div>
 
-      {/* 表单 */}
-      <div className="space-y-5">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="文章标题"
-          className="w-full rounded-2xl bg-white/80 px-4 py-3 text-lg outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
-        />
-
-        <div className="flex flex-wrap gap-3">
-          <select
-            value={categoryId ?? ''}
-            onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
-            className="rounded-2xl bg-white/80 px-4 py-2.5 outline-none ring-1 ring-ink/10"
-          >
-            <option value="">选择分类</option>
-            {categories?.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-          <div
-            onDrop={(e) => {
-              e.preventDefault()
-              onCoverUpload(e.dataTransfer.files?.[0])
-            }}
-            onDragOver={(e) => e.preventDefault()}
-            onClick={() => coverInputRef.current?.click()}
-            className="flex flex-1 cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-matcha/40 bg-white/60 px-4 py-2.5 text-sm text-ink-light hover:bg-white"
-          >
-            {cover ? (
-              <img src={cover} alt="封面预览" className="h-9 w-14 rounded object-cover" />
-            ) : (
-              <span>🖼️</span>
-            )}
-            <span>{cover ? '点击或拖拽更换封面' : '点击或拖拽上传封面图'}</span>
-            <input
-              ref={coverInputRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => {
-                onCoverUpload(e.target.files?.[0])
-                e.target.value = ''
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {tags?.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => toggleTag(t.id)}
-              className={`rounded-full px-3 py-1 text-xs transition-colors ${
-                tagIds.includes(t.id)
-                  ? 'bg-matcha text-white'
-                  : 'bg-white/70 text-ink-soft ring-1 ring-ink/10'
-              }`}
-            >
-              # {t.name}
-            </button>
-          ))}
-        </div>
-
-        <textarea
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-          rows={2}
-          placeholder="摘要（可手写，或点上方「摘要」让 AI 代劳）"
-          className="w-full rounded-2xl bg-white/80 p-3 text-sm outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
-        />
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-ink-light">
-            正文（Markdown）{generating && <span className="ml-2 animate-pulse text-matcha-deep">AI 书写中…</span>}
+      {/* 底部常驻操作栏 */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-ink/5 bg-paper-warm/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+          <span className="text-sm font-medium text-ink">
+            {editId ? '编辑文章' : '写下你的故事'}
           </span>
-          <button onClick={() => setPreview((p) => !p)} className="text-sm text-matcha-deep underline">
-            {preview ? '继续编辑' : '预览'}
-          </button>
-        </div>
-
-        {preview ? (
-          <div className="paper-card min-h-[16rem] p-6">
-            <MarkdownView content={content} />
+          <span className="hidden text-xs text-ink-light sm:inline">✍ {stats.words} 字 · 约 {stats.minutes} 分钟</span>
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={() => navigate(-1)} className="ghibli-btn-ghost text-sm">取消</button>
+            <button onClick={() => submit(0)} disabled={busy} className="ghibli-btn-ghost text-sm disabled:opacity-50">
+              存草稿
+            </button>
+            <button onClick={() => submit(1)} disabled={busy} className="ghibli-btn-primary text-sm disabled:opacity-50">
+              {busy ? '寄往世界…' : editId && origStatus === 1 ? '保存修改' : '发布文章'}
+            </button>
           </div>
-        ) : (
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={16}
-            className="w-full rounded-2xl bg-white/80 p-4 font-mono text-sm outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
-          />
-        )}
-
-        <div className="flex justify-end gap-3">
-          <button onClick={() => navigate(-1)} className="ghibli-btn-ghost">取消</button>
-          <button onClick={onSubmit} disabled={busy} className="ghibli-btn-primary disabled:opacity-50">
-            {busy ? '寄往世界…' : editId ? '保存修改' : '发布文章'}
-          </button>
         </div>
       </div>
     </div>
