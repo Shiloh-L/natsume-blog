@@ -7,14 +7,10 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'blog-services'
+  - job_name: 'blog-app'
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets:
-          - 'blog-gateway:8080'
-          - 'blog-auth:8081'
-          - 'blog-content:8082'
-          - 'blog-search:8083'
-          - 'blog-ai:8084'
+          - 'blog-app:8080'
         labels:
           group: 'natsume-blog'

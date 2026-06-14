@@ -1,0 +1,99 @@
+server:
+  port: 8080
+  tomcat:
+    max-swallow-size: -1
+    max-http-form-post-size: 52428800
+
+spring:
+  application:
+    name: blog-app
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:13307}/blog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:blog}
+    password: ${MYSQL_PASSWORD:blog123}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:redis123}
+      database: 0
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  ai:
+    # 显式选择模型提供方：聊天走 OpenAI 兼容网关（DeepSeek），
+    # 向量化走本地 ONNX（transformers）。两者并存时必须指定，避免 EmbeddingModel 冲突。
+    model:
+      chat: openai
+      embedding: transformers
+    openai:
+      base-url: ${LLM_BASE_URL:https://api.deepseek.com}
+      api-key: ${LLM_API_KEY:sk-no-key-required}
+      chat:
+        options:
+          model: ${LLM_MODEL:deepseek-chat}
+          temperature: 0.7
+    embedding:
+      transformer:
+        cache:
+          directory: ${MODEL_CACHE_DIR:/app/model-cache}
+    vectorstore:
+      qdrant:
+        host: ${QDRANT_HOST:localhost}
+        port: ${QDRANT_PORT:6334}
+        collection-name: blog_posts
+        initialize-schema: true
+        use-tls: false
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET:natsume-book-of-friends-secret-key-2024}
+  expire: ${JWT_EXPIRE:604800}
+
+# MinIO 对象存储
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin123}
+  bucket: blog
+  public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
+
+# MyBatis-Plus
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+  mapper-locations: classpath*:mapper/*.xml
+
+# Actuator + Prometheus
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: blog-app
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 50ms,100ms,200ms,500ms,1s,2s
+
+# Knife4j API 文档
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+springdoc:
+  swagger-ui:
+    path: /doc.html
+
+logging:
+  level:
+    com.natsume.blog: info
