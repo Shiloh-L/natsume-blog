@@ -53,6 +53,9 @@ export const uploadImage = (file: File) => {
 export const fetchCategories = () =>
   unwrap<Category[]>(http.get<Result<Category[]>>('/api/categories'))
 
+export const createCategory = (name: string, description?: string) =>
+  unwrap<number>(http.post<Result<number>>('/api/categories', { name, description }))
+
 export const fetchTags = () =>
   unwrap<Tag[]>(http.get<Result<Tag[]>>('/api/tags'))
 

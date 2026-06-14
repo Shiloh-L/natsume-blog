@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createPost,
+  createCategory,
   createTag,
   fetchCategories,
   fetchPost,
@@ -56,6 +57,9 @@ export default function WritePage() {
   const [aiOpen, setAiOpen] = useState(true)
   const [newTag, setNewTag] = useState('')
   const [creatingTag, setCreatingTag] = useState(false)
+  const [newCat, setNewCat] = useState('')
+  const [catInputOpen, setCatInputOpen] = useState(false)
+  const [creatingCat, setCreatingCat] = useState(false)
 
   const abortRef = useRef<AbortController | null>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -91,6 +95,31 @@ export default function WritePage() {
 
   const toggleTag = (id: number) =>
     setTagIds((arr) => (arr.includes(id) ? arr.filter((t) => t !== id) : [...arr, id]))
+
+  const addNewCategory = async () => {
+    const name = newCat.trim()
+    if (!name) return
+    const existing = categories?.find((c) => c.name === name)
+    if (existing) {
+      setCategoryId(existing.id)
+      setNewCat('')
+      setCatInputOpen(false)
+      return
+    }
+    setCreatingCat(true)
+    try {
+      const id = await createCategory(name)
+      await qc.invalidateQueries({ queryKey: ['categories'] })
+      setCategoryId(id)
+      setNewCat('')
+      setCatInputOpen(false)
+      toast.success(`已新建分类「${name}」`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || '创建分类失败')
+    } finally {
+      setCreatingCat(false)
+    }
+  }
 
   const addNewTag = async () => {
     const name = newTag.trim().replace(/^#/, '').trim()
@@ -561,16 +590,51 @@ export default function WritePage() {
             <h3 className="font-serif font-bold text-ink">文章设置</h3>
 
             <div>
-              <label className="mb-1 block text-xs text-ink-light">分类</label>
-              <Select
-                value={categoryId != null ? String(categoryId) : ''}
-                onChange={(v) => setCategoryId(v ? Number(v) : undefined)}
-                placeholder="选择分类"
-                options={[
-                  { value: '', label: '未分类' },
-                  ...(categories?.map((c) => ({ value: String(c.id), label: c.name })) ?? []),
-                ]}
-              />
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-xs text-ink-light">分类</label>
+                <button
+                  type="button"
+                  onClick={() => setCatInputOpen((o) => !o)}
+                  className="text-xs text-matcha-deep hover:underline"
+                >
+                  {catInputOpen ? '取消' : '+ 新建分类'}
+                </button>
+              </div>
+              {catInputOpen ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    value={newCat}
+                    onChange={(e) => setNewCat(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addNewCategory()
+                      }
+                    }}
+                    maxLength={20}
+                    autoFocus
+                    placeholder="新分类名，回车创建"
+                    className="flex-1 rounded-xl bg-white/80 px-3 py-2 text-sm outline-none ring-1 ring-ink/10 focus:ring-matcha-light"
+                  />
+                  <button
+                    onClick={addNewCategory}
+                    disabled={creatingCat || !newCat.trim()}
+                    className="shrink-0 rounded-xl bg-matcha-light/40 px-3 py-2 text-xs text-matcha-deep ring-1 ring-matcha/20 hover:bg-matcha-light/60 disabled:opacity-50"
+                  >
+                    {creatingCat ? '创建中…' : '创建'}
+                  </button>
+                </div>
+              ) : (
+                <Select
+                  value={categoryId != null ? String(categoryId) : ''}
+                  onChange={(v) => setCategoryId(v ? Number(v) : undefined)}
+                  placeholder="选择分类"
+                  options={[
+                    { value: '', label: '未分类' },
+                    ...(categories?.map((c) => ({ value: String(c.id), label: c.name })) ?? []),
+                  ]}
+                />
+              )}
             </div>
 
             <div>
